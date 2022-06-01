@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OpenNFP\Shared\OpenNFP.Shared.csproj" />
+    <ProjectReference Include="..\Shared\OpenNFP.Shared.csproj" />
   </ItemGroup>
 
 </Project>

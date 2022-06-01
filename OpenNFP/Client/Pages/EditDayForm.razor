@@ -118,13 +118,13 @@
     {
         if (string.IsNullOrEmpty(date))
         {
-            date = DateTime.Today.ToShortDateString();
+            date = DateTime.Today.ToKey();
             dateVal = DateTime.Today;
             Day = new DayRecord();
         }
         else
         {
-            dateVal = DateTime.Parse(date);
+            dateVal = date.ToDateTime();
             Day = FakeCycleData.Repo.GetDay(date);
         }
     }

@@ -35,6 +35,6 @@ namespace OpenNFP.Shared.Models
         public Flow BleedingAmount { get; set; } = Flow.Unknown;
         public string Notes { get; set; } = "";
 
-        public string IndexKey => _date.ToShortDateString();
+        public string IndexKey => _date.ToKey();
     }
 }

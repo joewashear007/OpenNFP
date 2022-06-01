@@ -33,14 +33,14 @@ namespace OpenNFP.Shared
 
         public IEnumerable<DayRecord> GetDayRecordsForCycle(DateTime cycleStart)
         {
-            if (_knownCycles.TryGetValue(cycleStart.ToShortDateString(), out Cycle? cycle))
+            if (_knownCycles.TryGetValue(cycleStart.ToKey(), out Cycle? cycle))
             {
                 if (cycle != null)
                 {
                     DateTime day = cycleStart;
                     do
                     {
-                        yield return _data[day.ToShortDateString()];
+                        yield return _data[day.ToKey()];
                         day = day.AddDays(1);
                     } while (day <= cycle.EndDate);
                 }
@@ -77,12 +77,13 @@ namespace OpenNFP.Shared
             }
             else
             {
-                DateTime firstCyle = DateTime.Parse(_knownCycles.Keys.First());
-                if (rec.Date < firstCyle)
+                string firstCycleKey = _knownCycles.Keys.First();
+                DateTime? firstCyle = firstCycleKey.ToDateTime();
+                if (firstCyle.HasValue && rec.Date < firstCyle.Value)
                 {
-                    if (rec.Date.AddDays(10) > firstCyle && _knownCycles[firstCyle.ToShortDateString()].Auto)
+                    if (rec.Date.AddDays(10) > firstCyle.Value && _knownCycles[firstCycleKey].Auto)
                     {
-                        _knownCycles.Remove(firstCyle.ToShortDateString());
+                        _knownCycles.Remove(firstCyle.ToKey());
                     }
 
                     _knownCycles[key] = new Cycle
@@ -105,9 +106,9 @@ namespace OpenNFP.Shared
         private void _computeCycleDays()
         {
 
-            if (!_knownCycles.ContainsKey(_startOfHistory.ToShortDateString()))
+            if (!_knownCycles.ContainsKey(_startOfHistory.ToKey()))
             {
-                _knownCycles[_startOfHistory.ToShortDateString()] = new Cycle
+                _knownCycles[_startOfHistory.ToKey()] = new Cycle
                 {
                     StartDate = _startOfHistory,
                     Auto = true
@@ -122,7 +123,7 @@ namespace OpenNFP.Shared
             Cycle? prevCycle = null;
             do
             {
-                string curkey = curDate.ToShortDateString();
+                string curkey = curDate.ToKey();
                 if (_knownCycles.ContainsKey(curkey))
                 {
                     cycleDay = 1;
