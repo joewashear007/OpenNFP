@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenNFP.Client", "OpenNFP\C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenNFP.Shared", "OpenNFP\Shared\OpenNFP.Shared.csproj", "{C52052B7-FC49-45CE-8BFD-B479923E7DD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenNFP.Shared.Tests", "OpenNFP.Shared.Tests\OpenNFP.Shared.Tests.csproj", "{C4C3EFB9-5946-472F-A406-FA0A8EF12516}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenNFP.Shared.Tests", "OpenNFP\Shared.Tests\OpenNFP.Shared.Tests.csproj", "{C4C3EFB9-5946-472F-A406-FA0A8EF12516}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
