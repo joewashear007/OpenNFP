@@ -1,0 +1,131 @@
+﻿@page "/editday/"
+@page "/editday/{date}"
+
+@using MudBlazor
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using OpenNFP.Shared
+@using OpenNFP.Shared.Models
+
+<MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">Edit Day</MudText>
+    @if (Day != null)
+    {
+        <MudCard>
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem md="4">
+                            <MudDatePicker Label="Date" @bind-Date="@dateVal"></MudDatePicker>
+                        </MudItem>
+                        <MudItem md="4">
+                            <MudNumericField @bind-Value="@Day.Temperature"
+                                         Label="Temperature"
+                                         Step=".1M"
+                                         Adornment="Adornment.End" AdornmentText="°F" Clearable=true />
+                        </MudItem>
+                        <MudItem m3="4">
+                            <MudCheckBox Class="mt-2" Label="Coitus" @bind-Checked="@Day.Coitus" Color="Color.Secondary" CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"></MudCheckBox>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid>
+                        <MudItem md="6">
+                            <MudField Label="Ovulation Test" Class="mb-4">
+                                <MudRadioGroup @bind-SelectedOption="@Day.OvulationTest">
+                                    <MudRadio Option="@(TestResult.Unknown)">None</MudRadio>
+                                    <MudRadio Option="@(TestResult.Negative)">Negative</MudRadio>
+                                    <MudRadio Option="@(TestResult.Positive)">Positive</MudRadio>
+                                </MudRadioGroup>
+                            </MudField>
+                        </MudItem>
+                        <MudItem md="6">
+                            <MudField Label="Pregancy Test">
+                                <MudRadioGroup @bind-SelectedOption="@Day.PregancyTest">
+                                    <MudRadio Option="@(TestResult.Unknown)">None</MudRadio>
+                                    <MudRadio Option="@(TestResult.Negative)">Negative</MudRadio>
+                                    <MudRadio Option="@(TestResult.Positive)">Positive</MudRadio>
+                                </MudRadioGroup>
+                            </MudField>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+                <MudCardContent Class="pa-0">
+                    <MudSlider TickMarks="true" TickMarkLabels="@clearBlueLabels"
+                           Step="1"
+                           Min="1"
+                           Max="@clearBlueLabels.Length"
+                           Class="mb-4 pl-8 pr-8">ClearBlue Monitor Value</MudSlider>
+                           @*@bind-Value="@Day.ClearBlueResult"*@
+
+                    <MudSlider TickMarks="true" TickMarkLabels="@cervixFirmLabels"
+                           Step="1"
+                           Min="1"
+                           Max="@cervixOpenLabels.Length"
+                           Class="mb-4 pl-8 pr-8"
+                    >Cervix Firmness</MudSlider>
+                           @*@bind-Value="@Day.CervixOpening"*@
+                    <MudSlider TickMarks="true" TickMarkLabels="@cervixOpenLabels"
+                           Step="1"
+                           Min="1"
+                           Max="@clearBlueLabels.Length"
+                           Class="mb-4 pl-8 pr-8"
+                           >Cervix Openness</MudSlider>
+                           @*@bind-Value="@Day.CervixTexture"
+
+                           *@
+
+
+                </MudCardContent>
+                <MudCardContent Class="pa-0">
+                    <MudSlider TickMarks="true" TickMarkLabels="@bleedingLables"
+                           Step="1"
+                           Min="1"
+                           Max="@bleedingLables.Length"
+                           Class="mb-4 pl-8 pr-8">Bleeding</MudSlider>
+                           @*@bind-Value="@Day.BleedingAmount"*@
+                </MudCardContent>
+                <MudCardContent Class=" mt-8">
+                    <MudTextField T="string" Label="Notes" Text="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
+                </MudCardContent>
+            </MudForm>
+        </MudCard>
+    }
+    else
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" />
+    }
+</MudContainer>
+
+@code {
+
+
+    [Parameter]
+    public string date { get; set; } = string.Empty;
+
+    DateTime? dateVal { get; set; }
+    DayRecord Day { get; set; }
+    bool success;
+    string[] errors = { };
+
+    MudForm form;
+
+    string[] clearBlueLabels = new string[] { "None", "Low", "High", "Peak", };
+    string[] cervixOpenLabels = new string[] { "Unknown", "Closed", "Open Least", "Open Most", };
+    string[] cervixFirmLabels = new string[] { "Unknown", "Hard", "Soft", "Open Most", };
+    string[] bleedingLables = new string[] { "None", "Spotting", "Light", "Heavy", };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(date))
+        {
+            date = DateTime.Today.ToShortDateString();
+            dateVal = DateTime.Today;
+            Day = new DayRecord();
+        }
+        else
+        {
+            dateVal = DateTime.Parse(date);
+            Day = FakeCycleData.Repo.GetDay(date);
+        }
+    }
+}

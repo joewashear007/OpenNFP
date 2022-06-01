@@ -1,0 +1,183 @@
+﻿@page "/"
+@using OpenNFP.Shared
+@using OpenNFP.Shared.Models
+@using PSC.Blazor.Components.Chartjs.Interfaces
+@using System.Text.Json.Serialization
+@using System.Collections.Generic
+
+<MudContainer MaxWidth="MaxWidth.False">
+    @foreach (var c in cycles)
+    {
+        var days = FakeCycleData.Repo.GetDayRecordsForCycle(c.StartDate);
+
+        <MudPaper Class="d-flex flex-row flex-grow-1 gap-4 mt-8" Elevation="0">
+            <MudCard Width="12em">
+                <MudCardContent>
+                    <MudText Align="Align.Center" Typo="Typo.subtitle1">Cycle 1</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center">@c.StartDate.ToString("MMM dd")</MudText>
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center">@c.StartDate.Year</MudText>
+                </MudCardContent>
+            </MudCard>
+            <MudList>
+                <MudItem Class="d-flex flex-row">
+                    @foreach (var day in days)
+                    {
+
+                        <MudPaper Outlined="true" Square="true" Width="3em" Height="2em"
+                          Class="d-flex align-center justify-center mud-width-full" xs="12">
+                            <MudText Typo="Typo.body2" Align="Align.Center">@day.Date.Day</MudText>
+                        </MudPaper>
+                    }
+                </MudItem>
+                <MudItem Class="d-flex flex-row">
+                    @foreach (var day in days)
+                    {
+                        <a href="/editpage/@day.IndexKey">
+                            <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
+                              Class="d-flex align-center justify-center mud-width-full" xs="12">
+                                <MudText Typo="Typo.h6" Align="Align.Center"> @((day.Date - c.StartDate).TotalDays)</MudText>
+                            </MudPaper>
+                        </a>
+                    }
+                </MudItem>
+                <MudItem Class="d-flex flex-row">
+                    @foreach (var day in days)
+                    {
+                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
+                          Class="d-flex align-center justify-center mud-width-full" xs="12">
+                            @if (day.Coitus)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Favorite" Title="Favorite" Size="Size.Small" />
+                            }
+                        </MudPaper>
+                    }
+                </MudItem>
+                <MudItem Class="d-flex flex-row">
+                    @foreach (var day in days)
+                    {
+                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
+                          Class="d-flex align-center justify-center mud-width-full" xs="12">
+                            @if (day.BleedingAmount == Flow.Spotting)
+                            {
+                                <MudIcon Icon="@Icons.Material.Outlined.WaterDrop" Title="Spotting" Size="Size.Small" />
+                            }
+                            @if (day.BleedingAmount == Flow.Light)
+                            {
+                                <MudIcon Icon="@Icons.Material.TwoTone.WaterDrop" Title="Light" Size="Size.Small" />
+                            }
+                            @if (day.BleedingAmount == Flow.Heavy)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Title="Heavy" Size="Size.Small" />
+                            }
+                        </MudPaper>
+                    }
+                </MudItem>
+                <MudItem Class="d-flex flex-row">
+                    @foreach (var day in days)
+                    {
+                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
+                          Class="d-flex align-center justify-center mud-width-full" xs="12">
+                            @if (day.CervixOpening == CervixOpening.Closed)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Circle" Title="Spotting" Size="Size.Small" Style="font-size:0.75em" />
+                            }
+                            @if (day.CervixOpening == CervixOpening.Partial)
+                            {
+                                <MudIcon Icon="@Icons.Material.TwoTone.Circle" Title="Light" Size="Size.Small" Style="font-size:1em" />
+                            }
+                            @if (day.CervixOpening == CervixOpening.Open)
+                            {
+                                <MudIcon Icon="@Icons.Material.Outlined.Circle" Title="Heavy" Size="Size.Small" />
+                            }
+                        </MudPaper>
+                    }
+                </MudItem>
+                <MudItem>
+                    <MudPaper Elevation="2">
+                        <Chart Config="@config" @ref="_chart1" />
+                    </MudPaper>
+                </MudItem>
+            </MudList>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private Chart _chart1;
+    private List<Cycle> cycles = new List<Cycle>();
+    string displayDate = DateTime.Today.Month + " / " + DateTime.Today.Month;
+    ChartOptions options = new ChartOptions()
+        {
+            DisableLegend = true,
+
+            YAxisTicks = 1,
+            MaxNumYAxisTicks = 3
+        };
+    IChartConfig config;
+
+    protected override void OnInitialized()
+    {
+        cycles = FakeCycleData.Repo.Cycles.ToList();
+
+        config = new LineChartConfig()
+            {
+                Data = new LineData()
+                {
+                    Labels = new List<string>() { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" },
+                    Datasets = new List<LineDataset>()
+                    {
+                        new LineDataset()
+                        {
+                            Data = new List<decimal> { 98.6M, 98.2M, 98.3M, 98.4M, 98.7M, 98.9M, 98.6M, 98.4M, 99.0M, 99.9M },
+                            Fill = false,
+
+                        }
+                    },
+
+                },
+                Options = new PSC.Blazor.Components.Chartjs.Models.Common.Options()
+                {
+                    Plugins = new Plugins()
+                    {
+                        Legend = new Legend()
+                        {
+                            Display = false,
+                        },
+
+                    },
+                    Scales = new Scales()
+                    {
+                        X = new XAxes()
+                        {
+                            Grid = new Grid() { },
+                            Position = "center",
+                            Ticks = new TicksEx()
+                            {
+                                Display = false
+                            }
+                        },
+                        Y = new YAxesEx()
+                        {
+                            Position = "center"
+                        },
+
+
+                    }
+                },
+            };
+    }
+    
+    public class YAxesEx : YAxes
+    {
+        [JsonPropertyName("position")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Position { get; set; } = "center";
+    }
+
+    public class TicksEx : Ticks
+    {
+        [JsonPropertyName("display")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Display { get; set; } = false;
+    }
+}

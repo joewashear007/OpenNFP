@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32519.379
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenNFP.Server", "OpenNFP\Server\OpenNFP.Server.csproj", "{2E9D9D37-7EEB-4498-A912-00691AAEE89D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenNFP.Client", "OpenNFP\Client\OpenNFP.Client.csproj", "{3B2E99D3-4DC3-494E-A3CF-38EB42D56736}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenNFP.Shared", "OpenNFP\Shared\OpenNFP.Shared.csproj", "{C52052B7-FC49-45CE-8BFD-B479923E7DD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenNFP.Shared.Tests", "OpenNFP.Shared.Tests\OpenNFP.Shared.Tests.csproj", "{C4C3EFB9-5946-472F-A406-FA0A8EF12516}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E9D9D37-7EEB-4498-A912-00691AAEE89D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E9D9D37-7EEB-4498-A912-00691AAEE89D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E9D9D37-7EEB-4498-A912-00691AAEE89D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E9D9D37-7EEB-4498-A912-00691AAEE89D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B2E99D3-4DC3-494E-A3CF-38EB42D56736}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B2E99D3-4DC3-494E-A3CF-38EB42D56736}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B2E99D3-4DC3-494E-A3CF-38EB42D56736}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B2E99D3-4DC3-494E-A3CF-38EB42D56736}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C52052B7-FC49-45CE-8BFD-B479923E7DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C52052B7-FC49-45CE-8BFD-B479923E7DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C52052B7-FC49-45CE-8BFD-B479923E7DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C52052B7-FC49-45CE-8BFD-B479923E7DD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4C3EFB9-5946-472F-A406-FA0A8EF12516}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4C3EFB9-5946-472F-A406-FA0A8EF12516}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4C3EFB9-5946-472F-A406-FA0A8EF12516}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4C3EFB9-5946-472F-A406-FA0A8EF12516}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6861D25E-9105-4A07-B5E1-1FA1D457245B}
+	EndGlobalSection
+EndGlobal
