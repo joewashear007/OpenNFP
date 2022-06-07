@@ -1,11 +1,8 @@
 ﻿@page "/editday/"
 @page "/editday/{date}"
 
-@using MudBlazor
-@using System.Text.RegularExpressions
-@using System.ComponentModel.DataAnnotations
-@using OpenNFP.Shared
-@using OpenNFP.Shared.Models
+@inject IChartingRepo ChartingRepo
+@inject NavigationManager uriHelper;
 
 <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">Edit Day</MudText>
@@ -32,63 +29,83 @@
                         <MudItem md="6">
                             <MudField Label="Ovulation Test" Class="mb-4">
                                 <MudRadioGroup @bind-SelectedOption="@Day.OvulationTest">
-                                    <MudRadio Option="@(TestResult.Unknown)">None</MudRadio>
-                                    <MudRadio Option="@(TestResult.Negative)">Negative</MudRadio>
-                                    <MudRadio Option="@(TestResult.Positive)">Positive</MudRadio>
-                                </MudRadioGroup>
-                            </MudField>
-                        </MudItem>
-                        <MudItem md="6">
-                            <MudField Label="Pregancy Test">
-                                <MudRadioGroup @bind-SelectedOption="@Day.PregancyTest">
-                                    <MudRadio Option="@(TestResult.Unknown)">None</MudRadio>
-                                    <MudRadio Option="@(TestResult.Negative)">Negative</MudRadio>
-                                    <MudRadio Option="@(TestResult.Positive)">Positive</MudRadio>
-                                </MudRadioGroup>
-                            </MudField>
-                        </MudItem>
-                    </MudGrid>
-                </MudCardContent>
-                <MudCardContent Class="pa-0">
-                    <MudSlider TickMarks="true" TickMarkLabels="@clearBlueLabels"
+                                    @foreach (var v in Enum.GetValues<TestResult>())
+                                    {
+                                    <MudRadio Option="@v">@v.ToString()</MudRadio>
+                                    }
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+                    <MudItem md="6">
+                        <MudField Label="Pregancy Test">
+                            <MudRadioGroup @bind-SelectedOption="@Day.PregancyTest">
+                                @foreach (var v in Enum.GetValues<TestResult>())
+                                    {
+                                    <MudRadio Option="@v">@v.ToString()</MudRadio>
+                                    }
+                                <MudRadio Option="@(TestResult.Positive)">Positive</MudRadio>
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+
+            <MudCardContent Class="pa-0">
+                <MudSlider TickMarks="true" TickMarkLabels="@clearblue.Labels"
                            Step="1"
-                           Min="1"
-                           Max="@clearBlueLabels.Length"
+                           Min="@clearblue.Min"
+                           Max="@clearblue.Max"
+                           @bind-Value="@clearblue.ValueInt"
                            Class="mb-4 pl-8 pr-8">ClearBlue Monitor Value</MudSlider>
-                           @*@bind-Value="@Day.ClearBlueResult"*@
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@cervixFirmLabels"
+                <MudSlider TickMarks="true" TickMarkLabels="@cervixTexture.Labels"
                            Step="1"
-                           Min="1"
-                           Max="@cervixOpenLabels.Length"
-                           Class="mb-4 pl-8 pr-8"
-                    >Cervix Firmness</MudSlider>
-                           @*@bind-Value="@Day.CervixOpening"*@
-                    <MudSlider TickMarks="true" TickMarkLabels="@cervixOpenLabels"
+                           Min="@cervixTexture.Min"
+                           Max="@cervixTexture.Max"
+                           @bind-Value="@cervixTexture.ValueInt"
+                           Class="mb-4 pl-8 pr-8">Cervix Firmness</MudSlider>
+
+                <MudSlider TickMarks="true" TickMarkLabels="@cervixOpening.Labels"
                            Step="1"
-                           Min="1"
-                           Max="@clearBlueLabels.Length"
-                           Class="mb-4 pl-8 pr-8"
-                           >Cervix Openness</MudSlider>
-                           @*@bind-Value="@Day.CervixTexture"
+                           Min="@cervixOpening.Min"
+                           Max="@cervixOpening.Max"
+                           @bind-Value="@cervixOpening.ValueInt"
+                           Class="mb-4 pl-8 pr-8">Cervix Openness</MudSlider>
 
-                           *@
+                <MudSlider TickMarks="true" TickMarkLabels="@mucusCharacteristic.Labels"
+                           Step="1"
+                           Min="@mucusCharacteristic.Min"
+                           Max="@mucusCharacteristic.Max"
+                           @bind-Value="@mucusCharacteristic.ValueInt"
+                           Class="mb-4 pl-8 pr-8">Mucus Characteristic</MudSlider>
+
+                <MudSlider TickMarks="true" TickMarkLabels="@mucusSensation.Labels"
+                           Step="1"
+                           Min="@mucusSensation.Min"
+                           Max="@mucusSensation.Max"
+                           @bind-Value="@mucusSensation.ValueInt"
+                           Class="mb-4 pl-8 pr-8">Mucus Sensation</MudSlider>
 
 
-                </MudCardContent>
-                <MudCardContent Class="pa-0">
-                    <MudSlider TickMarks="true" TickMarkLabels="@bleedingLables"
+
+            </MudCardContent>
+            <MudCardContent Class="pa-0">
+                <MudSlider TickMarks="true" TickMarkLabels="@bleedingLables"
                            Step="1"
                            Min="1"
                            Max="@bleedingLables.Length"
                            Class="mb-4 pl-8 pr-8">Bleeding</MudSlider>
-                           @*@bind-Value="@Day.BleedingAmount"*@
-                </MudCardContent>
-                <MudCardContent Class=" mt-8">
-                    <MudTextField T="string" Label="Notes" Text="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
-                </MudCardContent>
-            </MudForm>
-        </MudCard>
+
+            </MudCardContent>
+
+            <MudCardContent Class=" mt-8">
+                <MudTextField T="string" Label="Notes" Text="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(() => Save())">Save</MudButton>
+            </MudCardActions>
+        </MudForm>
+    </MudCard>
     }
     else
     {
@@ -97,25 +114,83 @@
 </MudContainer>
 
 @code {
-
-
     [Parameter]
     public string date { get; set; } = string.Empty;
 
     DateTime? dateVal { get; set; }
-    DayRecord Day { get; set; }
+    DayRecord? Day { get; set; } = null;
     bool success;
     string[] errors = { };
 
+    private int clearBlueslider { get; set; } = 0;
+
     MudForm form;
 
-    string[] clearBlueLabels = new string[] { "None", "Low", "High", "Peak", };
-    string[] cervixOpenLabels = new string[] { "Unknown", "Closed", "Open Least", "Open Most", };
-    string[] cervixFirmLabels = new string[] { "Unknown", "Hard", "Soft", "Open Most", };
-    string[] bleedingLables = new string[] { "None", "Spotting", "Light", "Heavy", };
-
-    protected override async Task OnInitializedAsync()
+    class EnumSliderHelper<T> where T : struct, Enum
     {
+        public EnumSliderHelper(Action<T> setProp)
+        {
+            Console.WriteLine($"Created new intance of {nameof(EnumSliderHelper<T>)}.");
+            this.setProp = setProp;
+        }
+        private T _value = default(T);
+        private readonly Action<T> setProp;
+
+        public string[] Labels => Enum.GetNames<T>();
+        public int Min => Enum.GetValues<T>().Cast<int>().Min();
+        public int Max => Enum.GetValues<T>().Cast<int>().Max();
+        public int ValueInt
+        {
+            get => (int)(object)_value;
+            set
+            {
+                T newValue = (T)(object)value;
+                Console.WriteLine($"Setting Value: {newValue}, prev: {_value}");
+                _value = newValue;
+                setProp(newValue);
+            }
+        }
+        public T Value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                setProp(value);
+            }
+        }
+    }
+
+    EnumSliderHelper<ClearBlueResult>? clearblue = null;
+    EnumSliderHelper<CervixOpening>? cervixOpening = null;
+    EnumSliderHelper<CervixTexture>? cervixTexture = null;
+    EnumSliderHelper<Flow>? flow = null;
+    EnumSliderHelper<TestResult>? pregTest = null;
+    EnumSliderHelper<TestResult>? ovulationTest = null;
+    EnumSliderHelper<MucusSensation>? mucusSensation = null;
+    EnumSliderHelper<MucusCharacteristic>? mucusCharacteristic = null;
+
+
+    string[] clearBlueLabels = Enum.GetNames(typeof(ClearBlueResult)).ToArray();
+    string[] cervixOpenLabels = Enum.GetNames(typeof(CervixOpening)).ToArray();
+    string[] cervixFirmLabels = Enum.GetNames(typeof(CervixTexture)).ToArray();
+    string[] bleedingLables = Enum.GetNames(typeof(Flow)).ToArray();
+    string[] pregTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
+    string[] ovulationTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
+    string[] mucusLabels = Enum.GetNames(typeof(MucusSensation)).ToArray();
+    string[] mucusCharLabels = Enum.GetNames(typeof(MucusCharacteristic)).ToArray();
+
+    protected override void OnInitialized()
+    {
+        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
+        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
+        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day.CervixTexture = q);
+        flow = new EnumSliderHelper<Flow>(q => Day.BleedingAmount = q);
+        pregTest = new EnumSliderHelper<TestResult>(q => Day.PregancyTest = q);
+        ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
+        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
+        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day.MucusCharacteristic = q);
+
         if (string.IsNullOrEmpty(date))
         {
             date = DateTime.Today.ToKey();
@@ -125,7 +200,39 @@
         else
         {
             dateVal = date.ToDateTime();
-            Day = FakeCycleData.Repo.GetDay(date);
+            Day = ChartingRepo.GetDay(date);
+        }
+
+        clearblue.Value = Day.ClearBlueResult;
+        clearblue.Value = Day.ClearBlueResult;
+        cervixOpening.Value = Day.CervixOpening;
+        cervixTexture.Value = Day.CervixTexture;
+        flow.Value = Day.BleedingAmount;
+        pregTest.Value = Day.PregancyTest;
+        ovulationTest.Value = Day.OvulationTest;
+        mucusSensation.Value = Day.MucusSensation;
+        mucusCharacteristic.Value = Day.MucusCharacteristic;
+    }
+
+    private void Save()
+    {
+        if (Day != null)
+        {
+            Day.ClearBlueResult = clearblue.Value;
+            Day.ClearBlueResult = clearblue.Value;
+            Day.CervixOpening = cervixOpening.Value;
+            Day.CervixTexture = cervixTexture.Value;
+            Day.BleedingAmount = flow.Value;
+            Day.PregancyTest = pregTest.Value;
+            Day.OvulationTest = ovulationTest.Value;
+            Day.MucusSensation = mucusSensation.Value;
+            Day.MucusCharacteristic = mucusCharacteristic.Value;
+            form.Validate();
+            if (form.IsValid && Day != null)
+            {
+                ChartingRepo.AddUpdateRecord(Day);
+                uriHelper.NavigateTo("/");
+            }
         }
     }
 }

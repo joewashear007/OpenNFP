@@ -1,14 +1,15 @@
 ﻿@page "/"
-@using OpenNFP.Shared
-@using OpenNFP.Shared.Models
+
 @using PSC.Blazor.Components.Chartjs.Interfaces
 @using System.Text.Json.Serialization
 @using System.Collections.Generic
 
+@inject IChartingRepo ChartingRepo
+
 <MudContainer MaxWidth="MaxWidth.False">
     @foreach (var c in cycles)
     {
-        var days = FakeCycleData.Repo.GetDayRecordsForCycle(c.StartDate);
+        var days = ChartingRepo.GetDayRecordsForCycle(c.StartDate);
 
         <MudPaper Class="d-flex flex-row flex-grow-1 gap-4 mt-8" Elevation="0">
             <MudCard Width="12em">
@@ -117,7 +118,7 @@
 
     protected override void OnInitialized()
     {
-        cycles = FakeCycleData.Repo.Cycles.ToList();
+        cycles = ChartingRepo.Cycles.ToList();
 
         config = new LineChartConfig()
             {

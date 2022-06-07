@@ -3,11 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OpenNFP.Shared
 {
-    public class ChartingRepo
+    public class ChartingRepo : IChartingRepo
     {
         DateTime _startOfHistory;
         DateTime _firstCycleDate;
@@ -57,6 +58,13 @@ namespace OpenNFP.Shared
 
         public void AddUpdateRecord(DayRecord rec, bool startNewCycle = false)
         {
+            _addUpdateRecordInternal(rec, startNewCycle);
+
+            _computeCycleDays();
+        }
+
+        private void _addUpdateRecordInternal(DayRecord rec, bool startNewCycle)
+        {
             string key = rec.IndexKey;
             _data[key] = rec;
             if (rec.Date < _startOfHistory)
@@ -94,15 +102,44 @@ namespace OpenNFP.Shared
 
                 }
             }
-
-
-            _computeCycleDays();
         }
 
         public DayRecord GetDay(string date)
         {
             return _data.GetValueOrDefault(date);
         }
+
+        public async Task SaveAsync()
+        {
+            ImportExportView save = new()
+            {
+                Cycles = _knownCycles.Values.ToList(),
+                Records = _data.Values.ToList()
+            };
+            using var file = new FileStream(@"C:\Temp\opennfp.json", FileMode.OpenOrCreate, FileAccess.Write);
+            await JsonSerializer.SerializeAsync(file, save);
+            file.Close();
+        }
+
+        public async Task OpenAsync()
+        {
+            using var file = new FileStream(@"C:\Temp\opennfp.json", FileMode.Open);
+            var rawData = await JsonSerializer.DeserializeAsync<ImportExportView>(file);
+            file.Close();
+            if (rawData != null)
+            {
+                foreach (var cycle in rawData.Cycles)
+                {
+                    _knownCycles[cycle.StartDate.ToKey()] = cycle;
+                }
+                foreach (var rec in rawData.Records)
+                {
+                    _addUpdateRecordInternal(rec, false);
+                }
+                _computeCycleDays();
+            }
+        }
+
         private void _computeCycleDays()
         {
 
@@ -139,7 +176,7 @@ namespace OpenNFP.Shared
                 curDate = curDate.AddDays(1);
 
             } while (curDate <= _endOfHistory);
-            _knownCycles[ _knownCycles.Keys.Last()].EndDate = _endOfHistory;
+            _knownCycles[_knownCycles.Keys.Last()].EndDate = _endOfHistory;
         }
 
         private IEnumerable<string> _findShortCycles()

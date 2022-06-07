@@ -1,5 +1,7 @@
 ﻿@using MudBlazor
 @inherits LayoutComponentBase
+@inject NavigationManager uriHelper;
+@inject IChartingRepo ChartingRepo
 
 <MudThemeProvider/>
 <MudDialogProvider/>
@@ -9,6 +11,9 @@
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         My Application
+
+        <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Inherit" Edge="Edge.End" OnClick="@((e) => Save())" />
+        <MudIconButton Icon="@Icons.Material.Filled.FileOpen" Color="Color.Inherit" Edge="Edge.End" OnClick="@((e) => Import())" />
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen">
         <NavMenu/>
@@ -26,5 +31,16 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    async Task Import()
+    {
+        uriHelper.NavigateTo(uriHelper.Uri, forceLoad: true);
+        await ChartingRepo.OpenAsync();
+    }
+
+    async Task Save()
+    {
+        await ChartingRepo.SaveAsync();
     }
 }
