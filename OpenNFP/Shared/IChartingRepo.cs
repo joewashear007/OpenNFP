@@ -8,7 +8,7 @@ namespace OpenNFP.Shared
 
         void AddUpdateRecord(DayRecord rec, bool startNewCycle = false);
         DayRecord GetDay(string date);
-        IEnumerable<DayRecord> GetDayRecordsForCycle(DateTime cycleStart);
+        IEnumerable<CycleDay> GetDayRecordsForCycle(DateTime cycleStart);
         Task OpenAsync();
         Task SaveAsync();
     }

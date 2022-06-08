@@ -32,8 +32,9 @@ namespace OpenNFP.Shared
             AddUpdateRecord(new DayRecord());
         }
 
-        public IEnumerable<DayRecord> GetDayRecordsForCycle(DateTime cycleStart)
+        public IEnumerable<CycleDay> GetDayRecordsForCycle(DateTime cycleStart)
         {
+            int i = 1;
             if (_knownCycles.TryGetValue(cycleStart.ToKey(), out Cycle? cycle))
             {
                 if (cycle != null)
@@ -41,8 +42,9 @@ namespace OpenNFP.Shared
                     DateTime day = cycleStart;
                     do
                     {
-                        yield return _data[day.ToKey()];
+                        yield return new CycleDay { Day = _data[day.ToKey()], Index = i };
                         day = day.AddDays(1);
+                        i++;
                     } while (day <= cycle.EndDate);
                 }
                 else
