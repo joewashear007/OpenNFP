@@ -231,7 +231,7 @@
             if (form.IsValid && Day != null)
             {
                 ChartingRepo.AddUpdateRecord(Day);
-                uriHelper.NavigateTo("/");
+                uriHelper.NavigateTo(uriHelper.BaseUri);
             }
         }
     }
