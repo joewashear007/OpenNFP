@@ -4,13 +4,13 @@ namespace OpenNFP.Shared
 {
     public interface IChartingRepo
     {
-        IEnumerable<Cycle> Cycles { get; }
+        IEnumerable<CycleIndex<Cycle>> Cycles { get; }
 
         void AddUpdateRecord(DayRecord rec, bool startNewCycle = false);
         ImportExportView Export();
         int GetCycleDay(string date);
         DayRecord GetDay(string date);
-        IEnumerable<CycleDay> GetDayRecordsForCycle(DateTime cycleStart);
+        IEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart);
         void Import(ImportExportView rawData);
         Task OpenAsync();
         Task SaveAsync();

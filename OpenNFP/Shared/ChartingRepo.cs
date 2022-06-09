@@ -18,7 +18,11 @@ namespace OpenNFP.Shared
         private SortedDictionary<string, int> _cycleDayMap;
         private SortedDictionary<string, Cycle> _knownCycles;
 
-        public IEnumerable<Cycle> Cycles { get => _knownCycles.Values; }
+        public IEnumerable<CycleIndex<Cycle>> Cycles {
+            get {
+                return _knownCycles.Values.Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v }).ToList();
+            }
+        }
 
         public ChartingRepo()
         {
@@ -32,7 +36,7 @@ namespace OpenNFP.Shared
             AddUpdateRecord(new DayRecord());
         }
 
-        public IEnumerable<CycleDay> GetDayRecordsForCycle(DateTime cycleStart)
+        public IEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart)
         {
             int i = 1;
             if (_knownCycles.TryGetValue(cycleStart.ToKey(), out Cycle? cycle))
@@ -42,7 +46,7 @@ namespace OpenNFP.Shared
                     DateTime day = cycleStart;
                     do
                     {
-                        yield return new CycleDay { Day = _data[day.ToKey()], Index = i };
+                        yield return new CycleIndex<DayRecord> { Item = _data[day.ToKey()], Index = i };
                         day = day.AddDays(1);
                         i++;
                     } while (day <= cycle.EndDate);
@@ -209,6 +213,10 @@ namespace OpenNFP.Shared
                         prevCycle.EndDate = curDate.AddDays(-1);
                     }
                     prevCycle = _knownCycles[curkey];
+                }
+                if (!_data.ContainsKey(curkey))
+                {
+                    _data[curkey] = new DayRecord() { Date = curDate };
                 }
 
                 _cycleDayMap[curkey] = cycleDay;

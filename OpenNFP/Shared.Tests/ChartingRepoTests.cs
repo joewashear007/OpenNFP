@@ -23,5 +23,18 @@ namespace OpenNFP.Shared.Tests
             // 10 day + today since we don't add today
             Assert.AreEqual(11, repo.GetDayRecordsForCycle(DateTime.Today.AddDays(-10)).Count());
         }
+
+        [TestMethod]
+        public void TestAddingDates()
+        {
+            ChartingRepo repo = new ChartingRepo();
+
+            repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), ClearBlueResult = ClearBlueResult.Peak, });
+            repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-10), ClearBlueResult = ClearBlueResult.Low, });
+
+            Assert.AreEqual(1, repo.Cycles.Count());
+            // 10 day + today since we don't add today
+            Assert.AreEqual(11, repo.GetDayRecordsForCycle(DateTime.Today.AddDays(-10)).Count());
+        }
     }
 }

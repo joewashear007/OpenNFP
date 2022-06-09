@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenNFP.Shared.Models
 {
-    public class CycleDay
+    public class CycleIndex<T> where T: class
     {
-        public DayRecord Day { get; set; }
+        public T? Item { get; set; }
         public int Index { get; set; }
     }
 }

@@ -9,14 +9,15 @@
 @inject IChartingRepo ChartingRepo
 
 <MudContainer MaxWidth="MaxWidth.False">
-    @foreach (var c in cycles)
+    @foreach (var ci in cycles)
     {
+        var c = ci.Item;
         var days = ChartingRepo.GetDayRecordsForCycle(c.StartDate).ToList();
 
         <MudPaper Class="d-flex flex-row flex-grow-1 gap-4 mt-8" Elevation="0">
             <MudCard Width="12em">
                 <MudCardContent>
-                    <MudText Align="Align.Center" Typo="Typo.subtitle1">Cycle 1</MudText>
+                    <MudText Align="Align.Center" Typo="Typo.subtitle1">Cycle @ci.Index</MudText>
                     <MudText Typo="Typo.h4" Align="Align.Center">@c.StartDate.ToString("MMM dd")</MudText>
                     <MudText Typo="Typo.subtitle1" Align="Align.Center">@c.StartDate.Year</MudText>
                 </MudCardContent>
@@ -26,10 +27,9 @@
                     <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
                     @foreach (var day in days)
                     {
-
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="2em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            <MudText Typo="Typo.body2" Align="Align.Center">@day.Day.Date.Day</MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center">@day.Item.Date.Day</MudText>
                         </MudPaper>
                     }
                 </MudItem>
@@ -37,7 +37,7 @@
                     <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
                     @foreach (var day in days)
                     {
-                        <a href="@(MyNavigationManager.BaseUri + "/editday/" + day.Day.IndexKey)">
+                        <a href="@(MyNavigationManager.BaseUri + "/editday/" + day.Item.IndexKey)">
                             <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                               Class="d-flex align-center justify-center mud-width-full" xs="12">
                                 <MudText Typo="Typo.h6" Align="Align.Center"> @day.Index</MudText>
@@ -51,7 +51,7 @@
                     {
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Day.Coitus)
+                            @if (day.Item.Coitus)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Favorite" Title="Favorite" Size="Size.Small" />
                             }
@@ -64,15 +64,15 @@
                     {
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Day.ClearBlueResult == ClearBlueResult.Low)
+                            @if (day.Item.ClearBlueResult == ClearBlueResult.Low)
                             {
                                 <MudText Typo="Typo.h6" Align="Align.Center">L</MudText>
                             }
-                            @if (day.Day.ClearBlueResult == ClearBlueResult.High)
+                            @if (day.Item.ClearBlueResult == ClearBlueResult.High)
                             {
                                 <MudText Typo="Typo.h6" Align="Align.Center">H</MudText>
                             }
-                            @if (day.Day.ClearBlueResult == ClearBlueResult.Peak)
+                            @if (day.Item.ClearBlueResult == ClearBlueResult.Peak)
                             {
                                 <MudText Typo="Typo.h6" Align="Align.Center">P</MudText>
                             }
@@ -85,15 +85,15 @@
                     {
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Day.MenstrationFlow == MenstrationFlow.Spotting)
+                            @if (day.Item.MenstrationFlow == MenstrationFlow.Spotting)
                             {
                                 <MudIcon Icon="@Icons.Material.Outlined.WaterDrop" Title="Spotting" Size="Size.Small" />
                             }
-                            @if (day.Day.MenstrationFlow == MenstrationFlow.Light)
+                            @if (day.Item.MenstrationFlow == MenstrationFlow.Light)
                             {
                                 <MudIcon Icon="@Icons.Material.TwoTone.WaterDrop" Title="Light" Size="Size.Small" />
                             }
-                            @if (day.Day.MenstrationFlow == MenstrationFlow.Heavy)
+                            @if (day.Item.MenstrationFlow == MenstrationFlow.Heavy)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Title="Heavy" Size="Size.Small" />
                             }
@@ -106,15 +106,15 @@
                     {
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Day.CervixOpening == CervixOpening.Closed)
+                            @if (day.Item.CervixOpening == CervixOpening.Closed)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Circle" Title="Spotting" Size="Size.Small" Style="font-size:0.75em" />
                             }
-                            @if (day.Day.CervixOpening == CervixOpening.Partial)
+                            @if (day.Item.CervixOpening == CervixOpening.Partial)
                             {
                                 <MudIcon Icon="@Icons.Material.TwoTone.Circle" Title="Light" Size="Size.Small" Style="font-size:1em" />
                             }
-                            @if (day.Day.CervixOpening == CervixOpening.Open)
+                            @if (day.Item.CervixOpening == CervixOpening.Open)
                             {
                                 <MudIcon Icon="@Icons.Material.Outlined.Circle" Title="Heavy" Size="Size.Small" />
                             }
@@ -134,14 +134,14 @@
 @code {
     private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
     private Dictionary<string, IChartConfig> _chartConfigs = new Dictionary<string, IChartConfig>();
-    private List<Cycle> cycles = new List<Cycle>();
+    private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
 
     protected override void OnInitialized()
     {
         cycles = ChartingRepo.Cycles.ToList();
         foreach (var c in cycles)
         {
-            var days = ChartingRepo.GetDayRecordsForCycle(c.StartDate).ToList();
+            var days = ChartingRepo.GetDayRecordsForCycle(c.Item.StartDate).ToList();
             var config = new LineChartConfigEx()
                 {
                     Data = new LineDataEx()
@@ -151,7 +151,7 @@
                     {
                         new LineDatasetEx()
                         {
-                            Data = days.Select(q => q.Day.Temperature ).ToList(),
+                            Data = days.Select(q => q.Item.Temperature ).ToList(),
                             Fill = false,
 
                         }
@@ -188,7 +188,7 @@
                         }
                     },
                 };
-            _chartConfigs[c.StartDate.ToKey()] = config;
+            _chartConfigs[c.Item.StartDate.ToKey()] = config;
         }
     }
 
