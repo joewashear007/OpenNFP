@@ -21,7 +21,7 @@ namespace OpenNFP.Shared.Models
         Negative = 2,
     }
 
-    public enum MenstrationFlow
+    public enum MenstruationFlow
     {
         Unknown = 0,
         Spotting = 1,

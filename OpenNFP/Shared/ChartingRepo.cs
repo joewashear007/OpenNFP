@@ -155,6 +155,10 @@ namespace OpenNFP.Shared
                 foreach (var cycle in rawData.Cycles)
                 {
                     _knownCycles[cycle.StartDate.ToKey()] = cycle;
+                    if(_startOfHistory > cycle.StartDate)
+                    {
+                        _startOfHistory = cycle.StartDate;
+                    }
                 }
                 foreach (var rec in rawData.Records)
                 {

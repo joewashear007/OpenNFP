@@ -25,7 +25,7 @@ namespace OpenNFP.Shared.Models
         public decimal? Temperature { get; set; }
         public ClearBlueResult ClearBlueResult { get; set; } = ClearBlueResult.Unknown;
         public bool Coitus { get; set; } = false;
-        public TestResult PregancyTest { get; set; } = TestResult.Unknown;
+        public TestResult PregnancyTest { get; set; } = TestResult.Unknown;
         public TestResult OvulationTest { get; set; } = TestResult.Unknown;
         public CervixOpening CervixOpening { get; set; } = CervixOpening.Unknown;
         public CervixTexture CervixTexture { get; set; } = CervixTexture.Unknown;
@@ -33,7 +33,7 @@ namespace OpenNFP.Shared.Models
         public MucusSensation MucusSensation { get; set; } = MucusSensation.Unknown;
         public MucusCharacteristic MucusCharacteristic { get; set; } = MucusCharacteristic.Unknown;
 
-        public MenstrationFlow MenstrationFlow { get; set; } = MenstrationFlow.Unknown;
+        public MenstruationFlow MenstruationFlow { get; set; } = MenstruationFlow.Unknown;
         public string Notes { get; set; } = "";
 
         [JsonIgnore]
