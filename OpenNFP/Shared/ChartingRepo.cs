@@ -111,6 +111,18 @@ namespace OpenNFP.Shared
             return _data.GetValueOrDefault(date);
         }
 
+        public int GetCycleDay(string date)
+        {
+            if (_cycleDayMap.TryGetValue(date, out int day))
+            {
+                return day;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
         public ImportExportView Export()
         {
             return new()

@@ -21,6 +21,7 @@ var host = builder.Build();
 
 var chartingRepo = host.Services.GetRequiredService<IChartingRepo>();
 
+
 chartingRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 99.9M, ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Open });
 chartingRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 99.0M, ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Closed });
 chartingRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), Temperature = 98.4M, ClearBlueResult = ClearBlueResult.High, CervixOpening = CervixOpening.Closed });

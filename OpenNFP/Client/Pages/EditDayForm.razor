@@ -1,11 +1,13 @@
 ﻿@page "/editday/"
 @page "/editday/{date}"
+@using System.Text.Json
 
 @inject IChartingRepo ChartingRepo
 @inject NavigationManager uriHelper;
 
+<PageTitle>Edit Page: @date (Cycle Day: #)</PageTitle>
+
 <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
-    <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">Edit Day</MudText>
     @if (Day != null)
     {
         <MudCard>
@@ -13,7 +15,7 @@
                 <MudCardContent>
                     <MudGrid>
                         <MudItem md="4">
-                            <MudDatePicker Label="Date" @bind-Date="@dateVal"></MudDatePicker>
+                            <MudDatePicker Label="Date" Date="@dateVal" DateChanged="@(d => ChangeDate(d))"></MudDatePicker>
                         </MudItem>
                         <MudItem md="4">
                             <MudNumericField @bind-Value="@Day.Temperature"
@@ -102,6 +104,7 @@
                 <MudTextField T="string" Label="Notes" Text="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
             </MudCardContent>
             <MudCardActions>
+                <MudCheckBox @bind-Checked="@startCycle" Label="This Day Should Start a Cycle"></MudCheckBox>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(() => Save())">Save</MudButton>
             </MudCardActions>
         </MudForm>
@@ -122,7 +125,8 @@
     bool success;
     string[] errors = { };
 
-    private int clearBlueslider { get; set; } = 0;
+    private bool startCycle { get; set; } = false;
+
 
     MudForm form;
 
@@ -130,7 +134,6 @@
     {
         public EnumSliderHelper(Action<T> setProp)
         {
-            Console.WriteLine($"Created new intance of {nameof(EnumSliderHelper<T>)}.");
             this.setProp = setProp;
         }
         private T _value = default(T);
@@ -145,7 +148,6 @@
             set
             {
                 T newValue = (T)(object)value;
-                Console.WriteLine($"Setting Value: {newValue}, prev: {_value}");
                 _value = newValue;
                 setProp(newValue);
             }
@@ -195,12 +197,14 @@
         {
             date = DateTime.Today.ToKey();
             dateVal = DateTime.Today;
-            Day = new DayRecord();
+            Day = new DayRecord() { Date = dateVal.Value };
+            startCycle = false;
         }
         else
         {
             dateVal = date.ToDateTime();
             Day = ChartingRepo.GetDay(date);
+            startCycle = ChartingRepo.GetCycleDay(date) == 1;
         }
 
         clearblue.Value = Day.ClearBlueResult;
@@ -228,11 +232,40 @@
             Day.MucusSensation = mucusSensation.Value;
             Day.MucusCharacteristic = mucusCharacteristic.Value;
             form.Validate();
-            if (form.IsValid && Day != null)
+            if (form.IsValid)
             {
-                ChartingRepo.AddUpdateRecord(Day);
+                Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
+                Console.WriteLine(JsonSerializer.Serialize(Day));
+                ChartingRepo.AddUpdateRecord(Day, startCycle);
                 uriHelper.NavigateTo(uriHelper.BaseUri);
             }
         }
+        else
+        {
+            Console.WriteLine("Error - Day is null");
+        }
+    }
+
+    private void ChangeDate(DateTime? d)
+    {
+        Console.WriteLine($"Changeing Date: {d}");
+        dateVal = d;
+        date = dateVal.ToKey();
+        Day = ChartingRepo.GetDay(date);
+        if (Day == null)
+        {
+            Day = new DayRecord() { Date = dateVal.Value };
+        }
+        clearblue.Value = Day.ClearBlueResult;
+        clearblue.Value = Day.ClearBlueResult;
+        cervixOpening.Value = Day.CervixOpening;
+        cervixTexture.Value = Day.CervixTexture;
+        flow.Value = Day.MenstrationFlow;
+        pregTest.Value = Day.PregancyTest;
+        ovulationTest.Value = Day.OvulationTest;
+        mucusSensation.Value = Day.MucusSensation;
+        mucusCharacteristic.Value = Day.MucusCharacteristic;
+        startCycle = ChartingRepo.GetCycleDay(date) == 1;
+        StateHasChanged();
     }
 }

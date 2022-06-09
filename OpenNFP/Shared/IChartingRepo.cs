@@ -8,6 +8,7 @@ namespace OpenNFP.Shared
 
         void AddUpdateRecord(DayRecord rec, bool startNewCycle = false);
         ImportExportView Export();
+        int GetCycleDay(string date);
         DayRecord GetDay(string date);
         IEnumerable<CycleDay> GetDayRecordsForCycle(DateTime cycleStart);
         void Import(ImportExportView rawData);
