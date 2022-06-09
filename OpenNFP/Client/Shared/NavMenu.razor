@@ -68,7 +68,7 @@
             Repo.Import(importData);
             StateHasChanged();
             Console.WriteLine($"Successfully Import Data (Cycles: {Repo.Cycles.Count() } )");
-            MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri, forceLoad: true);
+            MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri);
         }
     }
 
