@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace OpenNFP.Shared.Models
@@ -32,9 +33,10 @@ namespace OpenNFP.Shared.Models
         public MucusSensation MucusSensation { get; set; } = MucusSensation.Unknown;
         public MucusCharacteristic MucusCharacteristic { get; set; } = MucusCharacteristic.Unknown;
 
-        public Flow BleedingAmount { get; set; } = Flow.Unknown;
+        public MenstrationFlow MenstrationFlow { get; set; } = MenstrationFlow.Unknown;
         public string Notes { get; set; } = "";
 
+        [JsonIgnore]
         public string IndexKey => _date.ToKey();
     }
 }

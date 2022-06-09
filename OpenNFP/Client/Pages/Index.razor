@@ -85,15 +85,15 @@
                     {
                         <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
                           Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Day.BleedingAmount == Flow.Spotting)
+                            @if (day.Day.MenstrationFlow == MenstrationFlow.Spotting)
                             {
                                 <MudIcon Icon="@Icons.Material.Outlined.WaterDrop" Title="Spotting" Size="Size.Small" />
                             }
-                            @if (day.Day.BleedingAmount == Flow.Light)
+                            @if (day.Day.MenstrationFlow == MenstrationFlow.Light)
                             {
                                 <MudIcon Icon="@Icons.Material.TwoTone.WaterDrop" Title="Light" Size="Size.Small" />
                             }
-                            @if (day.Day.BleedingAmount == Flow.Heavy)
+                            @if (day.Day.MenstrationFlow == MenstrationFlow.Heavy)
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Title="Heavy" Size="Size.Small" />
                             }

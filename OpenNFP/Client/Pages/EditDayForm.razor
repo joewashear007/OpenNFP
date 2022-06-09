@@ -164,7 +164,7 @@
     EnumSliderHelper<ClearBlueResult>? clearblue = null;
     EnumSliderHelper<CervixOpening>? cervixOpening = null;
     EnumSliderHelper<CervixTexture>? cervixTexture = null;
-    EnumSliderHelper<Flow>? flow = null;
+    EnumSliderHelper<MenstrationFlow>? flow = null;
     EnumSliderHelper<TestResult>? pregTest = null;
     EnumSliderHelper<TestResult>? ovulationTest = null;
     EnumSliderHelper<MucusSensation>? mucusSensation = null;
@@ -174,7 +174,7 @@
     string[] clearBlueLabels = Enum.GetNames(typeof(ClearBlueResult)).ToArray();
     string[] cervixOpenLabels = Enum.GetNames(typeof(CervixOpening)).ToArray();
     string[] cervixFirmLabels = Enum.GetNames(typeof(CervixTexture)).ToArray();
-    string[] bleedingLables = Enum.GetNames(typeof(Flow)).ToArray();
+    string[] bleedingLables = Enum.GetNames(typeof(MenstrationFlow)).ToArray();
     string[] pregTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
     string[] ovulationTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
     string[] mucusLabels = Enum.GetNames(typeof(MucusSensation)).ToArray();
@@ -185,7 +185,7 @@
         clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
         cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
         cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day.CervixTexture = q);
-        flow = new EnumSliderHelper<Flow>(q => Day.BleedingAmount = q);
+        flow = new EnumSliderHelper<MenstrationFlow>(q => Day.MenstrationFlow = q);
         pregTest = new EnumSliderHelper<TestResult>(q => Day.PregancyTest = q);
         ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
         mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
@@ -207,7 +207,7 @@
         clearblue.Value = Day.ClearBlueResult;
         cervixOpening.Value = Day.CervixOpening;
         cervixTexture.Value = Day.CervixTexture;
-        flow.Value = Day.BleedingAmount;
+        flow.Value = Day.MenstrationFlow;
         pregTest.Value = Day.PregancyTest;
         ovulationTest.Value = Day.OvulationTest;
         mucusSensation.Value = Day.MucusSensation;
@@ -222,7 +222,7 @@
             Day.ClearBlueResult = clearblue.Value;
             Day.CervixOpening = cervixOpening.Value;
             Day.CervixTexture = cervixTexture.Value;
-            Day.BleedingAmount = flow.Value;
+            Day.MenstrationFlow = flow.Value;
             Day.PregancyTest = pregTest.Value;
             Day.OvulationTest = ovulationTest.Value;
             Day.MucusSensation = mucusSensation.Value;

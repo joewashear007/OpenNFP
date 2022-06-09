@@ -111,6 +111,15 @@ namespace OpenNFP.Shared
             return _data.GetValueOrDefault(date);
         }
 
+        public ImportExportView Export()
+        {
+            return new()
+            {
+                Cycles = _knownCycles.Values.ToList(),
+                Records = _data.Values.ToList()
+            };
+        }
+
         public async Task SaveAsync()
         {
             ImportExportView save = new()
@@ -122,6 +131,23 @@ namespace OpenNFP.Shared
             await JsonSerializer.SerializeAsync(file, save);
             file.Close();
         }
+
+        public void Import(ImportExportView rawData)
+        {
+            if (rawData != null)
+            {
+                foreach (var cycle in rawData.Cycles)
+                {
+                    _knownCycles[cycle.StartDate.ToKey()] = cycle;
+                }
+                foreach (var rec in rawData.Records)
+                {
+                    _addUpdateRecordInternal(rec, false);
+                }
+                _computeCycleDays();
+            }
+        }
+
 
         public async Task OpenAsync()
         {

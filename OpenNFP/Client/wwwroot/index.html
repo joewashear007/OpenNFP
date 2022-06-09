@@ -71,6 +71,46 @@
         }(window.location))
     </script>
     <!-- End Single Page Apps for GitHub Pages -->
+
+    <script>
+        //https://docs.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-6.0
+        window.downloadFileFromStream = async function (fileName, contentStreamReference) {
+            debugger
+            const arrayBuffer = await contentStreamReference.arrayBuffer();
+            const blob = new Blob([arrayBuffer]);
+            const url = URL.createObjectURL(blob);
+
+            triggerFileDownload(fileName, url);
+
+            URL.revokeObjectURL(url);
+        }
+        window.triggerFileDownload = function (fileName, url) {
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = fileName ?? '';
+            anchorElement.click();
+            anchorElement.remove();
+        }
+
+        // Use it for .NET 6+
+        window.BlazorDownloadFile = function (filename, contentType, content) {
+            // Create the URL
+            const file = new File([content], filename, { type: contentType });
+            const exportUrl = URL.createObjectURL(file);
+
+            // Create the <a> element and click on it
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.href = exportUrl;
+            a.download = filename;
+            a.target = "_self";
+            a.click();
+
+            // We don't need to keep the object URL, let's release the memory
+            // On older versions of Safari, it seems you need to comment this line...
+            URL.revokeObjectURL(exportUrl);
+        }
+    </script>
 </body>
 
 </html>

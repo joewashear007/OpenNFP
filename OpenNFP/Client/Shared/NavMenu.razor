@@ -1,16 +1,87 @@
 ﻿@using MudBlazor
+@using System.IO
+@using System.Text.Json
+@inject IJSRuntime JS
+@inject IChartingRepo Repo
+@inject IDialogService DialogService
 @inject NavigationManager MyNavigationManager
 
-<MudNavMenu>
-    <MudNavLink Href="@(MyNavigationManager.BaseUri)" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-    <MudNavLink Href="@(MyNavigationManager.BaseUri + "/editday/" + DateTime.Today.ToKey())" Match="NavLinkMatch.Prefix">Edit Day</MudNavLink>
-    <MudNavGroup Title="Settings" Expanded="true">
-        <MudNavLink Href="/users"  Match="NavLinkMatch.Prefix">Users</MudNavLink>
-        <MudNavLink Href="/security"  Match="NavLinkMatch.Prefix">Security</MudNavLink>
-    </MudNavGroup>
-    <MudNavLink Href="/about"  Match="NavLinkMatch.Prefix">About</MudNavLink>
-</MudNavMenu>
+<MudStack Justify="@Justify.SpaceBetween" Style="height:100%">
+
+    <MudNavMenu>
+        <MudNavLink Href="@(MyNavigationManager.BaseUri)" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+        <MudNavLink Href="@(MyNavigationManager.BaseUri + "/editday/" + DateTime.Today.ToKey())" Match="NavLinkMatch.Prefix">Edit Day</MudNavLink>
+        <MudNavGroup Title="Settings" Expanded="true">
+            <MudNavLink Href="/users" Match="NavLinkMatch.Prefix">Users</MudNavLink>
+            <MudNavLink Href="/security" Match="NavLinkMatch.Prefix">Security</MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">About</MudNavLink>
+    </MudNavMenu>
+
+    <MudPaper>
+        <MudList Clickable="true">
+            <MudDivider />
+            <MudListItem OnClick="Import" Text="Import" />
+            <MudDivider />
+            <MudListItem OnClick="Export" Text="Export" />
+        </MudList>
+    </MudPaper>
+</MudStack>
+
+<MudMessageBox @ref="mbox" Title="Replace Data" CancelText="Cancel" YesText="Upload and Overwrite">
+    <MessageContent>
+        This is erase all your data and import the data.
+        <InputFile id="fileInput" OnChange="UploadFiles" hidden />
+        <MudButton HtmlTag="label"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Filled.CloudUpload"
+                   for="fileInput">
+            Upload Files
+        </MudButton>
+        @if (!string.IsNullOrEmpty(importErrorText))
+        {
+            <MudAlert Severity="Severity.Error" >@importErrorText</MudAlert>
+        }
+    </MessageContent>
+</MudMessageBox>
+
 
 @code {
-    
+
+    private MudMessageBox mbox { get; set; }
+    private ImportExportView? importData { get; set; } = null;
+    private string importErrorText { get; set; } = "";
+
+    private async Task Export()
+    {
+        var data = Repo.Export();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(data);
+        await JS.InvokeVoidAsync("BlazorDownloadFile", "open-nfp.json", "application/json", bytes);
+    }
+
+    private async Task Import()
+    {
+        bool? result = await mbox.Show();
+        if (result.HasValue && result.Value && importData != null)
+        {
+            Repo.Import(importData);
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task UploadFiles(InputFileChangeEventArgs fileEvent)
+    {
+        try
+        {
+            Stream stream = fileEvent.File.OpenReadStream();
+            importData = await JsonSerializer.DeserializeAsync<ImportExportView>(stream);
+            importErrorText = ""; 
+        }
+        catch (Exception e)
+        {
+            importErrorText = e.Message;
+        }
+    }
 }
