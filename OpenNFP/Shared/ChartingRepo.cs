@@ -11,15 +11,16 @@ namespace OpenNFP.Shared
     public class ChartingRepo : IChartingRepo
     {
         DateTime _startOfHistory;
-        DateTime _firstCycleDate;
         DateTime _endOfHistory;
 
         private SortedDictionary<string, DayRecord> _data;
         private SortedDictionary<string, int> _cycleDayMap;
         private SortedDictionary<string, Cycle> _knownCycles;
 
-        public IEnumerable<CycleIndex<Cycle>> Cycles {
-            get {
+        public IEnumerable<CycleIndex<Cycle>> Cycles
+        {
+            get
+            {
                 return _knownCycles.Values.Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v }).ToList();
             }
         }
@@ -30,10 +31,9 @@ namespace OpenNFP.Shared
             _cycleDayMap = new SortedDictionary<string, int>();
             _startOfHistory = DateTime.Today;
             _endOfHistory = DateTime.Today;
-            _firstCycleDate = DateTime.Today;
             _knownCycles = new SortedDictionary<string, Cycle>();
             // Add a default empty record for today
-            AddUpdateRecord(new DayRecord());
+            //AddUpdateRecord(new DayRecord());
         }
 
         public IEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart)
@@ -115,6 +115,22 @@ namespace OpenNFP.Shared
             return _data.GetValueOrDefault(date);
         }
 
+        public bool IsCycleStart(string date)
+        {
+            return _knownCycles.ContainsKey(date);
+        }
+
+
+        public bool DeleteCycle(string date)
+        {
+            if(_knownCycles.ContainsKey(date))
+            {
+                _knownCycles.Remove(date);
+                return true;
+            }
+            return false;
+        }
+
         public int GetCycleDay(string date)
         {
             if (_cycleDayMap.TryGetValue(date, out int day))
@@ -155,7 +171,7 @@ namespace OpenNFP.Shared
                 foreach (var cycle in rawData.Cycles)
                 {
                     _knownCycles[cycle.StartDate.ToKey()] = cycle;
-                    if(_startOfHistory > cycle.StartDate)
+                    if (_startOfHistory > cycle.StartDate)
                     {
                         _startOfHistory = cycle.StartDate;
                     }
@@ -256,6 +272,35 @@ namespace OpenNFP.Shared
                     prevCycleStart = curCycleStart;
                 }
             }
+        }
+
+        public void Initialize(ChartSettings settings)
+        {
+            _startOfHistory = settings.StartDate;
+            _endOfHistory = settings.EndDate;
+            foreach (var c in settings.Cycles)
+            {
+                _knownCycles.Add(c.StartDate.ToKey(), c);
+            }
+        }
+
+        public ChartSettings GetSettings()
+        {
+            return new ChartSettings()
+            {
+                StartDate = _startOfHistory,
+                EndDate = _endOfHistory,
+                Cycles = _knownCycles.Values.ToList()
+            };
+        }
+
+        public void Clear()
+        {
+            _startOfHistory = DateTime.Today;
+            //_endOfHistory = DateTime.Today;
+            _data.Clear();
+            _knownCycles.Clear();
+            _cycleDayMap.Clear();
         }
     }
 }

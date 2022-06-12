@@ -14,5 +14,11 @@ namespace OpenNFP.Shared
         void Import(ImportExportView rawData);
         Task OpenAsync();
         Task SaveAsync();
+        void Initialize(ChartSettings settings);
+
+        void Clear();
+        ChartSettings GetSettings();
+        bool IsCycleStart(string date);
+        bool DeleteCycle(string date);
     }
 }

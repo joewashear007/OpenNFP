@@ -4,6 +4,7 @@
 @inject IJSRuntime JS
 @inject IChartingRepo Repo
 @inject IDialogService DialogService
+@inject ILocalStorageService localStorage
 @inject NavigationManager MyNavigationManager
 
 <MudStack Justify="@Justify.SpaceBetween" Style="height:100%">
@@ -12,8 +13,8 @@
         <MudNavLink Href="@(MyNavigationManager.BaseUri)" Match="NavLinkMatch.All">Dashboard</MudNavLink>
         <MudNavLink Href="@(MyNavigationManager.BaseUri + "/editday/" + DateTime.Today.ToKey())" Match="NavLinkMatch.Prefix">Edit Day</MudNavLink>
         <MudNavGroup Title="Settings" Expanded="true">
-            <MudNavLink Href="/users" Match="NavLinkMatch.Prefix">Users</MudNavLink>
-            <MudNavLink Href="/security" Match="NavLinkMatch.Prefix">Security</MudNavLink>
+            <MudNavLink OnClick="@ReloadDemoData">Reload Demo Data</MudNavLink>
+            <MudNavLink OnClick="@Clear">Clear Data</MudNavLink>
         </MudNavGroup>
         <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">About</MudNavLink>
     </MudNavMenu>
@@ -41,7 +42,7 @@
         </MudButton>
         @if (!string.IsNullOrEmpty(importErrorText))
         {
-            <MudAlert Severity="Severity.Error" >@importErrorText</MudAlert>
+            <MudAlert Severity="Severity.Error">@importErrorText</MudAlert>
         }
     </MessageContent>
 </MudMessageBox>
@@ -67,7 +68,7 @@
         {
             Repo.Import(importData);
             StateHasChanged();
-            Console.WriteLine($"Successfully Import Data (Cycles: {Repo.Cycles.Count() } )");
+            Console.WriteLine($"Successfully Import Data (Cycles: {Repo.Cycles.Count()} )");
             MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri);
         }
     }
@@ -79,11 +80,34 @@
         {
             Stream stream = fileEvent.File.OpenReadStream();
             importData = await JsonSerializer.DeserializeAsync<ImportExportView>(stream);
-            importErrorText = ""; 
+            importErrorText = "";
         }
         catch (Exception e)
         {
             importErrorText = e.Message;
         }
+    }
+
+    private async Task Clear()
+    {
+        await localStorage.ClearAsync();
+        Repo.Clear();
+    }
+
+    private async Task ReloadDemoData()
+    {
+        await localStorage.ClearAsync();
+        Repo.Clear();
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 99.9M, ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Open });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 99.0M, ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Closed });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), Temperature = 98.4M, ClearBlueResult = ClearBlueResult.High, CervixOpening = CervixOpening.Closed });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-4), Temperature = 98.6M, ClearBlueResult = ClearBlueResult.High, CervixOpening = CervixOpening.Closed });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-5), Temperature = 98.9M, ClearBlueResult = ClearBlueResult.Low, CervixOpening = CervixOpening.Closed });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-6), Temperature = 98.7M, ClearBlueResult = ClearBlueResult.Low, Coitus = true, CervixOpening = CervixOpening.Closed });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-7), Temperature = 98.4M, ClearBlueResult = ClearBlueResult.Low, MenstruationFlow = MenstruationFlow.Spotting, CervixOpening = CervixOpening.Partial });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-8), Temperature = 98.3M, ClearBlueResult = ClearBlueResult.Unknown, MenstruationFlow = MenstruationFlow.Light, CervixOpening = CervixOpening.Partial });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-9), Temperature = 98.2M, ClearBlueResult = ClearBlueResult.Low, MenstruationFlow = MenstruationFlow.Heavy, CervixOpening = CervixOpening.Open });
+        Repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-10), Temperature = 98.6M, ClearBlueResult = ClearBlueResult.Low, Coitus = true, MenstruationFlow = MenstruationFlow.Spotting, CervixOpening = CervixOpening.Closed });
+
     }
 }

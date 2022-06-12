@@ -3,6 +3,7 @@
 @using System.Text.Json
 
 @inject IChartingRepo ChartingRepo
+@inject ILocalStorageService localStorage
 @inject NavigationManager uriHelper;
 
 <PageTitle>Edit Page: @date (Cycle Day: #)</PageTitle>
@@ -217,7 +218,7 @@
         mucusCharacteristic.Value = Day.MucusCharacteristic;
     }
 
-    private void Save()
+    private async Task Save()
     {
         if (Day != null)
         {
@@ -233,10 +234,16 @@
             form.Validate();
             if (form.IsValid)
             {
+                bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(Day.IndexKey);
                 Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
-                Console.WriteLine(JsonSerializer.Serialize(Day));
+                if(!startCycle && isAlreadyCycleStart)
+                {
+                    ChartingRepo.DeleteCycle(Day.IndexKey);
+                }
                 ChartingRepo.AddUpdateRecord(Day, startCycle);
                 uriHelper.NavigateTo(uriHelper.BaseUri);
+                await localStorage.SetItemAsync(Day.IndexKey, Day);
+                await localStorage.SetItemAsync("chart.settings", ChartingRepo.GetSettings());
             }
         }
         else
