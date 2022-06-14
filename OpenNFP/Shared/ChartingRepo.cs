@@ -40,7 +40,7 @@ namespace OpenNFP.Shared
             _knownCycles = new SortedDictionary<string, Cycle>();
         }
 
-        public async IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart, bool limit)
+        public async IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycleAsync(DateTime cycleStart, bool limit)
         {
             int i = 1;
             if (_knownCycles.TryGetValue(cycleStart.ToKey(), out Cycle? cycle))

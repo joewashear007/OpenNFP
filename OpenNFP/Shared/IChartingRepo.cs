@@ -18,7 +18,7 @@ namespace OpenNFP.Shared
 
         Task<DayRecord> GetDayAsync(string date);
 
-        IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart, bool limit);
+        IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycleAsync(DateTime cycleStart, bool limit);
 
         ChartSettings GetSettings();
 

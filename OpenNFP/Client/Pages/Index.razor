@@ -144,7 +144,7 @@
             if (c.Item != null)
             {
                 string key = c.Item.StartDate.ToKey();
-                _days[key] = await ChartingRepo.GetDayRecordsForCycle(c.Item.StartDate, limit: true).ToListAsync();
+                _days[key] = await ChartingRepo.GetDayRecordsForCycleAsync(c.Item.StartDate, limit: true).ToListAsync();
                 var config = new LineChartConfigEx()
                     {
                         Data = new LineDataEx()

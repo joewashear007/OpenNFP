@@ -6,16 +6,20 @@ using System.Threading.Tasks;
 
 namespace OpenNFP.Shared.Tests
 {
-    internal class FakeStorageBackend<U> : IStorageBackend 
+    internal class FakeStorageBackend : IStorageBackend 
     {
-        private readonly Dictionary<string, U> _data = new Dictionary<string, U>();
-        public Task<T> Read<T>(string key)
+        private readonly Dictionary<string, object> _data = new();
+
+        public Dictionary<string, object> Data => _data;
+
+        public Task<T> ReadAsync<T>(string key)
         {
-            return (T)_data[key];
+            return Task.FromResult((T)_data.GetValueOrDefault(key)); ;
         }
 
-        public Task Write<T>(string key, T obj)
+        public Task WriteAsync<T>(string key, T obj)
         {
+            _data[key] = obj;
             return Task.CompletedTask;
         }
     }
