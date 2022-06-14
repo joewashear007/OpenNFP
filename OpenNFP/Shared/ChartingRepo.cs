@@ -1,42 +1,46 @@
-﻿using OpenNFP.Shared.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using OpenNFP.Shared.Internal;
+using OpenNFP.Shared.Models;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace OpenNFP.Shared
 {
     public class ChartingRepo : IChartingRepo
     {
-        DateTime _startOfHistory;
-        DateTime _endOfHistory;
+        public const string SETTING_KEY = "chart.settings";
 
-        private SortedDictionary<string, DayRecord> _data;
-        private SortedDictionary<string, int> _cycleDayMap;
-        private SortedDictionary<string, Cycle> _knownCycles;
+        private readonly IStorageBackend _storage;
+        private ChartSettings _settings;
+        private readonly DayRepo _dayRepo;
+        private readonly SortedDictionary<string, int> _cycleDayMap;
+        private readonly SortedDictionary<string, Cycle> _knownCycles;
 
         public IEnumerable<CycleIndex<Cycle>> Cycles
         {
             get
             {
-                return _knownCycles.Values.Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v }).ToList();
+                return _knownCycles.Values
+                    .Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v })
+                    .ToList();
             }
         }
 
-        public ChartingRepo()
+        public ImportExportView ExportModel => new()
         {
-            _data = new SortedDictionary<string, DayRecord>();
+            Cycles = _knownCycles.Values.ToList(),
+            Records = _dayRepo.Values.ToList()
+        };
+
+
+        public ChartingRepo(IStorageBackend storage)
+        {
+            _storage = storage;
+            _dayRepo = new DayRepo(storage);
+            _settings = new ChartSettings();
             _cycleDayMap = new SortedDictionary<string, int>();
-            _startOfHistory = DateTime.Today;
-            _endOfHistory = DateTime.Today;
             _knownCycles = new SortedDictionary<string, Cycle>();
-            // Add a default empty record for today
-            //AddUpdateRecord(new DayRecord());
         }
 
-        public IEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart)
+        public async IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart, bool limit)
         {
             int i = 1;
             if (_knownCycles.TryGetValue(cycleStart.ToKey(), out Cycle? cycle))
@@ -44,12 +48,15 @@ namespace OpenNFP.Shared
                 if (cycle != null)
                 {
                     DateTime day = cycleStart;
+                    bool displayLimitReached = false;
+
                     do
                     {
-                        yield return new CycleIndex<DayRecord> { Item = _data[day.ToKey()], Index = i };
+                        displayLimitReached = i >= _settings.CycleDisplayLimit && limit;
+                        yield return new CycleIndex<DayRecord> { Item = await _dayRepo.GetAsync(day), Index = i };
                         day = day.AddDays(1);
                         i++;
-                    } while (day <= cycle.EndDate);
+                    } while (day <= cycle.EndDate && !displayLimitReached);
                 }
                 else
                 {
@@ -62,35 +69,27 @@ namespace OpenNFP.Shared
             }
         }
 
-        public void AddUpdateRecord(DayRecord rec, bool startNewCycle = false)
+        public async Task AddUpdateRecord(DayRecord rec, bool startNewCycle = false)
         {
-            _addUpdateRecordInternal(rec, startNewCycle);
-
-            _computeCycleDays();
+            await _addUpdateRecordInternalAsync(rec, startNewCycle);
+            await _computeCycleDays();
         }
 
-        private void _addUpdateRecordInternal(DayRecord rec, bool startNewCycle)
+
+
+        private async Task _addUpdateRecordInternalAsync(DayRecord rec, bool startNewCycle)
         {
             string key = rec.IndexKey;
-            _data[key] = rec;
-            if (rec.Date < _startOfHistory)
-            {
-                _startOfHistory = rec.Date;
-            }
-            if (rec.Date > _endOfHistory)
-            {
-                _endOfHistory = rec.Date;
-            }
+            await _dayRepo.SetAsync(rec);
+            _settings.UpdateStartEndDates(rec.Date);
+
             if (startNewCycle || _knownCycles.Count == 0)
             {
-                _knownCycles[key] = new Cycle
-                {
-                    StartDate = rec.Date,
-                    Auto = true
-                };
+                _addAutoCycle(rec.Date);
             }
             else
             {
+                // Combine Cycle if next cycle is with 10 days and is an auto cycle
                 string firstCycleKey = _knownCycles.Keys.First();
                 DateTime? firstCyle = firstCycleKey.ToDateTime();
                 if (firstCyle.HasValue && rec.Date < firstCyle.Value)
@@ -99,20 +98,14 @@ namespace OpenNFP.Shared
                     {
                         _knownCycles.Remove(firstCyle.ToKey());
                     }
-
-                    _knownCycles[key] = new Cycle
-                    {
-                        StartDate = rec.Date,
-                        Auto = true
-                    };
-
+                    _addAutoCycle(rec.Date);
                 }
             }
         }
 
-        public DayRecord GetDay(string date)
+        public async Task<DayRecord> GetDayAsync(string date)
         {
-            return _data.GetValueOrDefault(date);
+            return await _dayRepo.GetAsync(date);
         }
 
         public bool IsCycleStart(string date)
@@ -120,12 +113,12 @@ namespace OpenNFP.Shared
             return _knownCycles.ContainsKey(date);
         }
 
-
-        public bool DeleteCycle(string date)
+        public async Task<bool> DeleteCycleAsync(string date)
         {
-            if(_knownCycles.ContainsKey(date))
+            if (_knownCycles.ContainsKey(date))
             {
                 _knownCycles.Remove(date);
+                await _storage.WriteAsync(SETTING_KEY, GetSettings());
                 return true;
             }
             return false;
@@ -143,47 +136,36 @@ namespace OpenNFP.Shared
             }
         }
 
-        public ImportExportView Export()
-        {
-            return new()
-            {
-                Cycles = _knownCycles.Values.ToList(),
-                Records = _data.Values.ToList()
-            };
-        }
+
 
         public async Task SaveAsync()
         {
             ImportExportView save = new()
             {
                 Cycles = _knownCycles.Values.ToList(),
-                Records = _data.Values.ToList()
+                Records = _dayRepo.Values.ToList()
             };
             using var file = new FileStream(@"C:\Temp\opennfp.json", FileMode.OpenOrCreate, FileAccess.Write);
             await JsonSerializer.SerializeAsync(file, save);
             file.Close();
         }
 
-        public void Import(ImportExportView rawData)
+        public async Task ImportAsync(ImportExportView rawData)
         {
             if (rawData != null)
             {
                 foreach (var cycle in rawData.Cycles)
                 {
                     _knownCycles[cycle.StartDate.ToKey()] = cycle;
-                    if (_startOfHistory > cycle.StartDate)
-                    {
-                        _startOfHistory = cycle.StartDate;
-                    }
+                    _settings.UpdateStartEndDates(cycle.StartDate);
                 }
                 foreach (var rec in rawData.Records)
                 {
-                    _addUpdateRecordInternal(rec, false);
+                    await _addUpdateRecordInternalAsync(rec, false);
                 }
-                _computeCycleDays();
+                await _computeCycleDays();
             }
         }
-
 
         public async Task OpenAsync()
         {
@@ -198,28 +180,26 @@ namespace OpenNFP.Shared
                 }
                 foreach (var rec in rawData.Records)
                 {
-                    _addUpdateRecordInternal(rec, false);
+                    await _addUpdateRecordInternalAsync(rec, false);
                 }
-                _computeCycleDays();
+                await _computeCycleDays();
             }
         }
 
-        private void _computeCycleDays()
+        private void _addAutoCycle(DateTime date)
         {
-
-            if (!_knownCycles.ContainsKey(_startOfHistory.ToKey()))
+            string key = date.ToKey();
+            if (!_knownCycles.ContainsKey(key))
             {
-                _knownCycles[_startOfHistory.ToKey()] = new Cycle
-                {
-                    StartDate = _startOfHistory,
-                    Auto = true
-                };
+                _knownCycles[key] = new Cycle() { Auto = true, StartDate = date };
             }
+        }
 
-            //_findShortCycles().ToList().ForEach(q => _knownCycles.Remove(q));
+        private async Task _computeCycleDays()
+        {
+            _addAutoCycle(_settings.StartDate);
 
-
-            DateTime curDate = _startOfHistory;
+            DateTime curDate = _settings.StartDate;
             int cycleDay = 1;
             Cycle? prevCycle = null;
             do
@@ -234,73 +214,52 @@ namespace OpenNFP.Shared
                     }
                     prevCycle = _knownCycles[curkey];
                 }
-                if (!_data.ContainsKey(curkey))
+                if (!await _dayRepo.ExistsAsync(curkey))
                 {
-                    _data[curkey] = new DayRecord() { Date = curDate };
+                    await _dayRepo.SetAsync(new DayRecord(curDate));
                 }
 
                 _cycleDayMap[curkey] = cycleDay;
                 cycleDay++;
                 curDate = curDate.AddDays(1);
-
-            } while (curDate <= _endOfHistory);
-            _knownCycles[_knownCycles.Keys.Last()].EndDate = _endOfHistory;
+            } while (curDate <= _settings.EndDate);
+            _knownCycles[_knownCycles.Keys.Last()].EndDate = _settings.EndDate;
+            await _storage.WriteAsync(SETTING_KEY, GetSettings());
         }
 
-        private IEnumerable<string> _findShortCycles()
-        {
-            int shortestCycle = 10;
-            var cycleDates = _knownCycles.Keys.ToArray();
-            DateTime prevCycleStart = DateTime.Parse(cycleDates[0]);
-            for (int i = 1; i < cycleDates.Length; i++)
-            {
-                DateTime curCycleStart = DateTime.Parse(cycleDates[i]);
-                if (prevCycleStart.AddDays(shortestCycle) >= curCycleStart)
-                {
-                    if (_knownCycles[cycleDates[i]].Auto)
-                    {
-                        // Let's drop cycle that are too close together
-                        yield return cycleDates[i];
-                    }
-                    else
-                    {
-                        prevCycleStart = curCycleStart;
-                    }
-                }
-                else
-                {
-                    prevCycleStart = curCycleStart;
-                }
-            }
-        }
 
-        public void Initialize(ChartSettings settings)
+        public async Task InitializeAsync()
         {
-            _startOfHistory = settings.StartDate;
-            _endOfHistory = settings.EndDate;
-            foreach (var c in settings.Cycles)
+
+            var loadedSettings = await _storage.ReadAsync<ChartSettings>(SETTING_KEY);
+            if (loadedSettings != null)
             {
-                _knownCycles.Add(c.StartDate.ToKey(), c);
+                _settings = loadedSettings;
             }
+            else
+            {
+                await _storage.WriteAsync(SETTING_KEY, _settings);
+            }
+
+
         }
 
         public ChartSettings GetSettings()
         {
             return new ChartSettings()
             {
-                StartDate = _startOfHistory,
-                EndDate = _endOfHistory,
+                StartDate = _settings.StartDate,
+                EndDate = _settings.EndDate,
                 Cycles = _knownCycles.Values.ToList()
             };
         }
 
         public void Clear()
         {
-            _startOfHistory = DateTime.Today;
-            //_endOfHistory = DateTime.Today;
-            _data.Clear();
+            _settings = new ChartSettings();
             _knownCycles.Clear();
             _cycleDayMap.Clear();
+            _dayRepo.Clear();
         }
     }
 }

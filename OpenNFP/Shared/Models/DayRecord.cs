@@ -9,6 +9,20 @@ namespace OpenNFP.Shared.Models
 {
     public class DayRecord
     {
+        public DayRecord()
+        {
+            _date = DateTime.Today;
+        }
+
+        public DayRecord(DateTime date)
+        {
+            _date = date;
+        }
+        public DayRecord(string key)
+        {
+            _date = key.ToDateTime() ?? DateTime.Today;
+        }
+
         private DateTime _date = DateTime.Today.Date;
         public DateTime Date
         {

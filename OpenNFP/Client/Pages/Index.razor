@@ -12,7 +12,7 @@
     @foreach (var ci in cycles)
     {
         var c = ci.Item;
-        var days = ChartingRepo.GetDayRecordsForCycle(c.StartDate).ToList();
+        var days = _days[c.StartDate.ToKey()];
 
         <MudPaper Class="d-flex flex-row flex-grow-1 gap-4 mt-8" Elevation="0">
             <MudCard Width="12em">
@@ -135,60 +135,65 @@
     private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
     private Dictionary<string, IChartConfig> _chartConfigs = new Dictionary<string, IChartConfig>();
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
+    private Dictionary<string, List<CycleIndex<DayRecord>>> _days = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        cycles = ChartingRepo.Cycles.ToList();
-        foreach (var c in cycles)
+        foreach (var c in ChartingRepo.Cycles)
         {
-            var days = ChartingRepo.GetDayRecordsForCycle(c.Item.StartDate).ToList();
-            var config = new LineChartConfigEx()
-                {
-                    Data = new LineDataEx()
+            if (c.Item != null)
+            {
+                string key = c.Item.StartDate.ToKey();
+                _days[key] = await ChartingRepo.GetDayRecordsForCycle(c.Item.StartDate, limit: true).ToListAsync();
+                var config = new LineChartConfigEx()
                     {
-                        Labels = days.Select(q => q.Index.ToString()).ToList(),
-                        Datasets = new List<LineDatasetEx>()
+                        Data = new LineDataEx()
+                        {
+                            Labels = _days[key].Select(q => q.Index.ToString()).ToList(),
+                            Datasets = new List<LineDatasetEx>()
                     {
                         new LineDatasetEx()
                         {
-                            Data = days.Select(q => q.Item.Temperature ).ToList(),
+                            Data = _days[key].Select(q => q.Item.Temperature  ).ToList(),
                             Fill = false,
 
                         }
                     },
-
-                    },
-                    Options = new PSC.Blazor.Components.Chartjs.Models.Common.Options()
-                    {
-                        Plugins = new Plugins()
-                        {
-                            Legend = new Legend()
-                            {
-                                Display = false,
-                            },
-
                         },
-                        Scales = new Scales()
+                        Options = new PSC.Blazor.Components.Chartjs.Models.Common.Options()
                         {
-                            X = new XAxes()
+                            Plugins = new Plugins()
                             {
-                                Grid = new Grid() { },
-                                Position = "center",
-                                Ticks = new TicksEx()
+                                Legend = new Legend()
                                 {
-                                    Display = false
-                                }
+                                    Display = false,
+                                },
+
                             },
-                            Y = new YAxesEx()
+                            Scales = new Scales()
                             {
-                                Position = "center"
-                            },
+                                X = new XAxes()
+                                {
+                                    Grid = new Grid() { },
+                                    Position = "center",
+                                    Ticks = new TicksEx()
+                                    {
+                                        Display = false
+                                    }
+                                },
+                                Y = new YAxesEx()
+                                {
+                                    Position = "center"
+                                },
 
 
-                        }
-                    },
-                };
-            _chartConfigs[c.Item.StartDate.ToKey()] = config;
+                            }
+                        },
+                    };
+                _chartConfigs[key] = config;
+                cycles.Add(c);
+                StateHasChanged();
+            }
         }
     }
 

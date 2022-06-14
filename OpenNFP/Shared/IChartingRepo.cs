@@ -6,19 +6,30 @@ namespace OpenNFP.Shared
     {
         IEnumerable<CycleIndex<Cycle>> Cycles { get; }
 
-        void AddUpdateRecord(DayRecord rec, bool startNewCycle = false);
-        ImportExportView Export();
-        int GetCycleDay(string date);
-        DayRecord GetDay(string date);
-        IEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart);
-        void Import(ImportExportView rawData);
-        Task OpenAsync();
-        Task SaveAsync();
-        void Initialize(ChartSettings settings);
+        ImportExportView ExportModel { get; }
+
+        Task AddUpdateRecord(DayRecord rec, bool startNewCycle = false);
 
         void Clear();
+
+        Task<bool> DeleteCycleAsync(string date);
+
+        int GetCycleDay(string date);
+
+        Task<DayRecord> GetDayAsync(string date);
+
+        IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycle(DateTime cycleStart, bool limit);
+
         ChartSettings GetSettings();
+
+        Task ImportAsync(ImportExportView rawData);
+
+        Task InitializeAsync();
+
         bool IsCycleStart(string date);
-        bool DeleteCycle(string date);
+
+        Task OpenAsync();
+
+        Task SaveAsync();
     }
 }

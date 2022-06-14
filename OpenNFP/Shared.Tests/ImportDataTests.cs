@@ -51,7 +51,7 @@ namespace OpenNFP.Shared.Tests
 
 
             using MemoryStream stream = new();
-            var data = repo.Export();
+            var data = repo.ExportModel;
             await JsonSerializer.SerializeAsync(stream, data);
             string streamContent = Encoding.UTF8.GetString(stream.ToArray());
             Assert.IsTrue(streamContent.Length > 1);
@@ -67,7 +67,7 @@ namespace OpenNFP.Shared.Tests
             string data = await File.ReadAllTextAsync(@".\data\converted_data.json");
             var importData = JsonSerializer.Deserialize<ImportExportView>(data);
 
-            repo.Import(importData);
+            repo.ImportAsync(importData);
 
             Assert.IsTrue(true);
 

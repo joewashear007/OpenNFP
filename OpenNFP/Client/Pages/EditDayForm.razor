@@ -182,7 +182,7 @@
     string[] mucusLabels = Enum.GetNames(typeof(MucusSensation)).ToArray();
     string[] mucusCharLabels = Enum.GetNames(typeof(MucusCharacteristic)).ToArray();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
         cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
@@ -203,7 +203,7 @@
         else
         {
             dateVal = date.ToDateTime();
-            Day = ChartingRepo.GetDay(date);
+            Day = await ChartingRepo.GetDayAsync(date);
             startCycle = ChartingRepo.GetCycleDay(date) == 1;
         }
 
@@ -238,7 +238,7 @@
                 Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
                 if(!startCycle && isAlreadyCycleStart)
                 {
-                    ChartingRepo.DeleteCycle(Day.IndexKey);
+                    ChartingRepo.DeleteCycleAsync(Day.IndexKey);
                 }
                 ChartingRepo.AddUpdateRecord(Day, startCycle);
                 uriHelper.NavigateTo(uriHelper.BaseUri);
@@ -252,12 +252,12 @@
         }
     }
 
-    private void ChangeDate(DateTime? d)
+    private async Task ChangeDate(DateTime? d)
     {
         Console.WriteLine($"Changeing Date: {d}");
         dateVal = d;
         date = dateVal.ToKey();
-        Day = ChartingRepo.GetDay(date);
+        Day = await ChartingRepo.GetDayAsync(date);
         if (Day == null)
         {
             Day = new DayRecord() { Date = dateVal.Value };
