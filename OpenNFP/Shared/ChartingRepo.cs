@@ -235,6 +235,7 @@ namespace OpenNFP.Shared
             if (loadedSettings != null)
             {
                 _settings = loadedSettings;
+                loadedSettings.Cycles.ForEach(q => _knownCycles.Add(q.StartDate.ToKey(), q));
             }
             else
             {
