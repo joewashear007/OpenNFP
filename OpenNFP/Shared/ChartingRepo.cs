@@ -137,19 +137,6 @@ namespace OpenNFP.Shared
         }
 
 
-
-        public async Task SaveAsync()
-        {
-            ImportExportView save = new()
-            {
-                Cycles = _knownCycles.Values.ToList(),
-                Records = _dayRepo.Values.ToList()
-            };
-            using var file = new FileStream(@"C:\Temp\opennfp.json", FileMode.OpenOrCreate, FileAccess.Write);
-            await JsonSerializer.SerializeAsync(file, save);
-            file.Close();
-        }
-
         public async Task ImportAsync(ImportExportView rawData)
         {
             if (rawData != null)
@@ -167,24 +154,7 @@ namespace OpenNFP.Shared
             }
         }
 
-        public async Task OpenAsync()
-        {
-            using var file = new FileStream(@"C:\Temp\opennfp.json", FileMode.Open);
-            var rawData = await JsonSerializer.DeserializeAsync<ImportExportView>(file);
-            file.Close();
-            if (rawData != null)
-            {
-                foreach (var cycle in rawData.Cycles)
-                {
-                    _knownCycles[cycle.StartDate.ToKey()] = cycle;
-                }
-                foreach (var rec in rawData.Records)
-                {
-                    await _addUpdateRecordInternalAsync(rec, false);
-                }
-                await _computeCycleDays();
-            }
-        }
+
 
         private void _addAutoCycle(DateTime date)
         {

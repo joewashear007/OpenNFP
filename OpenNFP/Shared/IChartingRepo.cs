@@ -28,8 +28,5 @@ namespace OpenNFP.Shared
 
         bool IsCycleStart(string date);
 
-        Task OpenAsync();
-
-        Task SaveAsync();
     }
 }
