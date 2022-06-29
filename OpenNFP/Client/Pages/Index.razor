@@ -11,251 +11,30 @@
 <MudContainer MaxWidth="MaxWidth.False">
     @foreach (var ci in cycles)
     {
-        var c = ci.Item;
-        var days = _days[c.StartDate.ToKey()];
-
-        <MudPaper Class="d-flex flex-row flex-grow-1 gap-4 mt-8" Elevation="0">
-            <MudCard Width="12em">
-                <MudCardContent>
-                    <MudText Align="Align.Center" Typo="Typo.subtitle1">Cycle @ci.Index</MudText>
-                    <MudText Typo="Typo.h4" Align="Align.Center">@c.StartDate.ToString("MMM dd")</MudText>
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center">@c.StartDate.Year</MudText>
-                </MudCardContent>
-            </MudCard>
-            <MudList>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <MudPaper Outlined="true" Square="true" Width="3em" Height="2em"
-                          Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            <MudText Typo="Typo.body2" Align="Align.Center">@day.Item.Date.Day</MudText>
-                        </MudPaper>
-                    }
-                </MudItem>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <a href="@(MyNavigationManager.BaseUri + "/editday/" + day.Item.IndexKey)">
-                            <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
-                              Class="d-flex align-center justify-center mud-width-full" xs="12">
-                                <MudText Typo="Typo.h6" Align="Align.Center"> @day.Index</MudText>
-                            </MudPaper>
-                        </a>
-                    }
-                </MudItem>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
-                          Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Item.Coitus)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Favorite" Title="Favorite" Size="Size.Small" />
-                            }
-                        </MudPaper>
-                    }
-                </MudItem>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
-                          Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Item.ClearBlueResult == ClearBlueResult.Low)
-                            {
-                                <MudText Typo="Typo.h6" Align="Align.Center">L</MudText>
-                            }
-                            @if (day.Item.ClearBlueResult == ClearBlueResult.High)
-                            {
-                                <MudText Typo="Typo.h6" Align="Align.Center">H</MudText>
-                            }
-                            @if (day.Item.ClearBlueResult == ClearBlueResult.Peak)
-                            {
-                                <MudText Typo="Typo.h6" Align="Align.Center">P</MudText>
-                            }
-                        </MudPaper>
-                    }
-                </MudItem>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
-                          Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Item.MenstruationFlow == MenstruationFlow.Spotting)
-                            {
-                                <MudIcon Icon="@Icons.Material.Outlined.WaterDrop" Title="Spotting" Size="Size.Small" />
-                            }
-                            @if (day.Item.MenstruationFlow == MenstruationFlow.Light)
-                            {
-                                <MudIcon Icon="@Icons.Material.TwoTone.WaterDrop" Title="Light" Size="Size.Small" />
-                            }
-                            @if (day.Item.MenstruationFlow == MenstruationFlow.Heavy)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Title="Heavy" Size="Size.Small" />
-                            }
-                        </MudPaper>
-                    }
-                </MudItem>
-                <MudItem Class="d-flex flex-row">
-                    <MudPaper Outlined="false" Square="true" Width="3em" Height="2em" xs="12" Elevation="0" />
-                    @foreach (var day in days)
-                    {
-                        <MudPaper Outlined="true" Square="true" Width="3em" Height="3em"
-                          Class="d-flex align-center justify-center mud-width-full" xs="12">
-                            @if (day.Item.CervixOpening == CervixOpening.Closed)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Circle" Title="Spotting" Size="Size.Small" Style="font-size:0.75em" />
-                            }
-                            @if (day.Item.CervixOpening == CervixOpening.Partial)
-                            {
-                                <MudIcon Icon="@Icons.Material.TwoTone.Circle" Title="Light" Size="Size.Small" Style="font-size:1em" />
-                            }
-                            @if (day.Item.CervixOpening == CervixOpening.Open)
-                            {
-                                <MudIcon Icon="@Icons.Material.Outlined.Circle" Title="Heavy" Size="Size.Small" />
-                            }
-                        </MudPaper>
-                    }
-                </MudItem>
-                <MudItem>
-                    <MudPaper Elevation="2">
-                        <Chart Config="@_chartConfigs[c.StartDate.ToKey()]" @ref="_charts[c.StartDate.ToKey()]" />
-                    </MudPaper>
-                </MudItem>
-            </MudList>
-        </MudPaper>
+        <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true />
     }
 </MudContainer>
 
 @code {
-    private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
-    private Dictionary<string, IChartConfig> _chartConfigs = new Dictionary<string, IChartConfig>();
+
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
-    private Dictionary<string, List<CycleIndex<DayRecord>>> _days = new();
+    private int CycleLimit { get; set; } = 3;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        foreach (var c in ChartingRepo.Cycles)
+        Console.WriteLine($"Index Render, Cycle Limit: {CycleLimit}, Count: {cycles.Count}");
+        if (cycles.Count < CycleLimit)
         {
-            if (c.Item != null)
+            cycles.Clear();
+            foreach (var c in ChartingRepo.Cycles.Take(CycleLimit - cycles.Count))
             {
-                string key = c.Item.StartDate.ToKey();
-                _days[key] = await ChartingRepo.GetDayRecordsForCycleAsync(c.Item.StartDate, limit: true).ToListAsync();
-                var config = new LineChartConfigEx()
-                    {
-                        Data = new LineDataEx()
-                        {
-                            Labels = _days[key].Select(q => q.Index.ToString()).ToList(),
-                            Datasets = new List<LineDatasetEx>()
-                    {
-                        new LineDatasetEx()
-                        {
-                            Data = _days[key].Select(q => q.Item.Temperature  ).ToList(),
-                            Fill = false,
-
-                        }
-                    },
-                        },
-                        Options = new PSC.Blazor.Components.Chartjs.Models.Common.Options()
-                        {
-                            Plugins = new Plugins()
-                            {
-                                Legend = new Legend()
-                                {
-                                    Display = false,
-                                },
-
-                            },
-                            Scales = new Scales()
-                            {
-                                X = new XAxes()
-                                {
-                                    Grid = new Grid() { },
-                                    Position = "center",
-                                    Ticks = new TicksEx()
-                                    {
-                                        Display = false
-                                    }
-                                },
-                                Y = new YAxesEx()
-                                {
-                                    Position = "center"
-                                },
-
-
-                            }
-                        },
-                    };
-                _chartConfigs[key] = config;
-                cycles.Add(c);
-                StateHasChanged();
+                if (c.Item != null)
+                {
+                    cycles.Add(c);
+                }
             }
+            StateHasChanged();
+            await Task.Delay(50);
         }
-    }
-
-    public class YAxesEx : YAxes
-    {
-        [JsonPropertyName("position")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Position { get; set; } = "center";
-    }
-
-    public class TicksEx : Ticks
-    {
-        [JsonPropertyName("display")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public bool? Display { get; set; } = false;
-    }
-
-    public class LineDatasetEx : Dataset
-    {
-        [JsonPropertyName("data")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<decimal?> Data { get; set; }
-
-        [JsonPropertyName("backgroundColor")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string BackgroundColor { get; set; }
-
-        [JsonPropertyName("borderColor")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string BorderColor { get; set; }
-
-        [JsonPropertyName("fill")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public bool Fill { get; set; }
-
-        [JsonPropertyName("tension")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public decimal Tension { get; set; }
-
-    }
-
-    public class LineDataEx : Data<LineDatasetEx>
-    {
-
-    }
-
-    public class LineChartConfigEx : IChartConfig
-    {
-        [JsonIgnore]
-        public string CanvasId { get; } = Guid.NewGuid().ToString();
-
-
-        [JsonPropertyName("type")]
-        public string Type { get; set; } = "line";
-
-
-        [JsonPropertyName("data")]
-        public LineDataEx Data { get; set; } = new LineDataEx();
-
-
-        [JsonPropertyName("options")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public Options Options { get; set; }
     }
 }

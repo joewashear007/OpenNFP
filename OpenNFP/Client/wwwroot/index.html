@@ -151,7 +151,45 @@
             // On older versions of Safari, it seems you need to comment this line...
             URL.revokeObjectURL(exportUrl);
         }
+
+        function plotyMapper(data) {
+            let p = data.points[0];
+            let d = {
+                index: p.pointIndex,
+            }
+            console.log(d);
+            return d;
+        }
+
+        Blazor.registerCustomEventType('plotlyclick', {
+            browserEventName: 'plotly_click',
+            createEventArgs: event => {
+                return {
+                    index: event.points[0].pointIndex,
+                }
+            },
+        });
+        function subscribeClickEvent(dotNetObj, id) {
+            var plot = document.getElementById(id);
+            plot.on('plotly_click', function (data) {
+                let index = -1;
+                if (typeof (data.points[0].pointIndex) === "number") {
+                    index = data.points[0].pointIndex
+                } else {
+                    index = data.points[0].pointIndex[1]
+                }
+                console.info(`plotly click event` ,index)
+                dotNetObj.invokeMethodAsync('ClickEvent', index);
+            })
+        }
+
+
     </script>
+    <!-- Import the plotly.js library -->
+    <script src="_content/Plotly.Blazor/plotly-latest.min.js" type="text/javascript"></script>
+
+    <!-- Import the plotly.js interop functions -->
+    <script src="_content/Plotly.Blazor/plotly-interop.js" type="text/javascript"></script>
 </body>
 
 </html>

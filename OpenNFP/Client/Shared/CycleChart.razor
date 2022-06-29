@@ -1,0 +1,283 @@
+﻿@inject IChartingRepo Repo
+@inject NavigationManager MyNavigationManager
+@inject IJSRuntime JsRuntime
+@implements IDisposable
+
+
+
+@using OpenNFP.Client.Utils
+@using Plotly.Blazor
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Traces
+@using Plotly.Blazor.Traces.ScatterLib
+@using System.Globalization
+
+
+
+<MudCard Width="@((_days.Count *55) + "px")" Height="600px">
+    <MudCardHeader>
+        <MudChip Label="true">Cycle @CycleIndex</MudChip>
+        <MudText Align="Align.Center" Typo="Typo.subtitle1"></MudText>
+        <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----")</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (_days.Any())
+        {
+            <PlotlyChart style="height: 100%; min-height: 350px" @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
+        }
+        else
+        {
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="10px" />
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
+        }
+    </MudCardContent>
+</MudCard>
+
+
+@code {
+    [Parameter]
+    public Cycle? Cycle { get; set; }
+
+    [Parameter]
+    public int CycleIndex { get; set; }
+
+    [Parameter]
+    public bool LimitDays { get; set; } = false;
+
+    private IChartConfig _chartConfig = new LineChartConfig();
+    private List<CycleIndex<DayRecord>> _days = new();
+
+    private PlotlyChart? chart;
+    private DotNetObjectReference<CycleChart>? _chartRef;
+    private Config config = new()
+        {
+            Responsive = true,
+            StaticPlot = false,
+            DisplayLogo = false,
+            DoubleClick = Plotly.Blazor.ConfigLib.DoubleClickEnum.False,
+            Editable = false,
+            ShowAxisDragHandles = false,
+            ShowEditInChartStudio = false,
+            ShowSources = false,
+            Watermark = false,
+            DisplayModeBar = Plotly.Blazor.ConfigLib.DisplayModeBarEnum.False,
+            FrameMargins = 0
+
+        };
+
+
+    private IList<ITrace> data { get; set; } = new List<ITrace>();
+
+    private Layout layout { get; set; } = new Layout()
+        {
+            YAxis = new List<YAxis> {
+            new()
+            {
+                Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Temp" },
+                Domain = new List<object>() {0M, 0.4}
+            },
+            new()
+            {
+                Domain = new List<object>() {0.45, 0.85},
+                GridWidth  =1,
+
+            },
+            new()
+            {
+                Domain = new List<object>() {0.90, 1},
+                GridWidth  =1,
+
+            }
+        },
+            XAxis = new List<XAxis>()
+            {
+                new XAxis()
+                {
+                    Title = new Plotly.Blazor.LayoutLib.XAxisLib.Title { Text = "Cycle Days"},
+                    Domain = new List<object>(){ 0,1 }
+                }
+            },
+            ClickMode = ClickModeFlag.Event,
+            DragMode = DragModeEnum.False,
+            Annotations = new List<Annotation>(),
+            AutoSize = true,
+            Margin = new Plotly.Blazor.LayoutLib.Margin() { AutoExpand = false },
+
+        };
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Start {nameof(OnParametersSetAsync)} [{chart != null} && {Cycle != null} && {!_days.Any()}] ");
+        if (Cycle != null && !_days.Any())
+        {
+            Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Loading Data");
+            data.Clear();
+            _days = await Repo.GetDayRecordsForCycleAsync(Cycle.StartDate, limit: LimitDays).ToListAsync();
+
+            var xDays = _days.Select(q => q.Index).Cast<object>().ToList();
+            var ytempValues = _days.Select(q => q.Item?.Temperature).Select(q => q < 90 ? null : q).Cast<object>().ToList();
+
+            ITrace tempTrace = new Scatter
+                {
+                    Mode = ModeFlag.Lines | ModeFlag.Markers,
+                    X = xDays,
+                    Y = ytempValues,
+                    YAxis = "y",
+                    ShowLegend = false,
+                };
+
+            HeatMap hm = new HeatMap()
+                {
+                    X = xDays,
+                    Y = new List<object>() { "Monitor", "Cervix", "Mucus", "Mens" },
+                    Z = new List<object>() {
+                        _days.Select(q => (int)(q.Item?.ClearBlueResult ?? ClearBlueResult.Unknown)).Cast<object>().ToList(),
+                        _days.Select(q => q.Item?.CervixChartValue ?? 0).Cast<object>().ToList(),
+                        _days.Select(q => q.Item?.MucusChartValue ?? 0).Cast<object>().ToList(),
+                        _days.Select(q => q.Item?.MucusChartValue ?? 0).Cast<object>().ToList(),
+                        _days.Select(q => q.Item?.MenstruationChartValue ?? 0).Cast<object>().ToList(),
+                    },
+                    ShowLegend = false,
+                    YAxis = "y2",
+                    ShowScale = false,
+                    XGap = 3,
+                    YGap = 1,
+                    ColorScale = new List<object>()
+                    {
+                        new List<object>() {0.0 , MudBlazor.Colors.Purple.Lighten5},
+                        new List<object>() {0.25 , MudBlazor.Colors.Purple.Lighten4},
+                        new List<object>() {0.5 , MudBlazor.Colors.Purple.Lighten3},
+                        new List<object>() {0.75 , MudBlazor.Colors.Purple.Lighten2},
+                        new List<object>() {1, MudBlazor.Colors.Purple.Lighten1},
+
+                    }
+                };
+            HeatMap hmDate = new HeatMap()
+                {
+                    X = xDays,
+                    Y = new List<object>() { "Day" },
+                    Z = new List<object>() {
+                        _days.Select(q => q.Index).Cast<object>().ToList(),
+                    },
+                    ShowLegend = false,
+                    YAxis = "y3",
+                    ShowScale = false,
+                    XGap = 3,
+                    YGap = 1,
+                };
+
+
+            data.Add(tempTrace);
+            data.Add(hm);
+            data.Add(hmDate);
+            layout.Annotations = new List<Annotation>();
+            layout.Annotations.AddRange(_days.Select(q => new Annotation()
+                {
+                    XRef = "x1",
+                    YRef = "y2",
+                    X = q.Index,
+                    Y = 0,
+                    Text = (q.Item?.ClearBlueResult ?? ClearBlueResult.Unknown).ToString().Substring(0, 1),
+                    ShowArrow = false,
+                    Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
+                    {
+                        Color = "white",
+                        Size = 12,
+                    }
+                }));
+            layout.Annotations.AddRange(_days.Select(q => new Annotation()
+                {
+                    XRef = "x1",
+                    YRef = "y2",
+                    X = q.Index,
+                    Y = 1,
+                    Text = q.Item?.CervixChartLabel ?? string.Empty,
+                    ShowArrow = false,
+                    Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
+                    {
+                        Color = "white",
+                        Size = 12,
+                    }
+                }));
+
+
+            layout.Annotations.AddRange(_days.Select(q => new Annotation()
+                {
+                    XRef = "x1",
+                    YRef = "y2",
+                    X = q.Index,
+                    Y = 2,
+                    Text = q.Item?.MucusChartLabel ?? string.Empty,
+                    ShowArrow = false,
+                    Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
+                    {
+                        Color = "white",
+                        Size = 12,
+                    }
+                }));
+            layout.Annotations.AddRange(_days.Select(q => new Annotation()
+                {
+                    XRef = "x1",
+                    YRef = "y2",
+                    X = q.Index,
+                    Y = 3,
+                    Text = q.Item?.MenstruationChartLabel ?? string.Empty,
+                    ShowArrow = false,
+                    Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
+                    {
+                        Color = "white",
+                        Size = 12,
+                    }
+                }));
+            layout.Annotations.AddRange(_days.Select(q => new Annotation()
+                {
+                    XRef = "x1",
+                    YRef = "y3",
+                    X = q.Index,
+                    Y = 1,
+                    Text = q.Index.ToString(),
+                    ShowArrow = false,
+                    Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
+                    {
+                        Color = "white",
+                        Size = 14,
+                    }
+                }));
+            Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Updating Chart");
+        }
+
+        if (chart != null && _chartRef == null)
+        {
+            Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Adding Event Handler");
+            _chartRef = DotNetObjectReference.Create(this);
+            await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
+        }
+
+    }
+
+    /// <summary>
+    /// Method which is called by JSRuntime once a plot has been clicked, to invoke the passed in Action
+    /// Objects are currently required for accomodating different plot value types
+    /// </summary>
+    /// <param name="index"></param>
+    [JSInvokable("ClickEvent")]
+    public void ClickEvent(int index)
+    {
+        //var i = Convert.ToInt32(index);
+        Console.WriteLine($"BLAZOR: click event: {index} ");
+        var d = _days[index].Item?.IndexKey ?? "";
+        if (!string.IsNullOrEmpty(d))
+        {
+            MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri + "/editday/" + d);
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _chartRef?.Dispose();
+        chart?.Dispose();
+    }
+}

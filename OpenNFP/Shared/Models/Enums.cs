@@ -47,8 +47,9 @@ namespace OpenNFP.Shared.Models
     {
         Unknown = 0,
         None = 1,
-        Slippery = 2,
-        Watery = 3,
+        Most = 2,
+        Slippery = 3,
+        Watery = 4,
     }
 
     public enum MucusCharacteristic

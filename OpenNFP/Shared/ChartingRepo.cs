@@ -18,7 +18,7 @@ namespace OpenNFP.Shared
         {
             get
             {
-                return _knownCycles.Values
+                return _knownCycles.Values.Reverse()
                     .Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v })
                     .ToList();
             }
