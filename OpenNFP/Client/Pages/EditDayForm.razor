@@ -31,20 +31,20 @@
                     <MudGrid>
                         <MudItem md="6">
                             <MudField Label="Ovulation Test" Class="mb-4">
-                                <MudRadioGroup @bind-SelectedOption="@Day.OvulationTest">
+                                <MudRadioGroup @bind-SelectedOption="@ovulationTest.ValueInt">
                                     @foreach (var v in Enum.GetValues<TestResult>())
                                     {
-                                    <MudRadio Option="@v">@v.ToString()</MudRadio>
+                                    <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
                                     }
                             </MudRadioGroup>
                         </MudField>
                     </MudItem>
                     <MudItem md="6">
                         <MudField Label="Pregancy Test">
-                            <MudRadioGroup @bind-SelectedOption="@Day.PregnancyTest">
+                            <MudRadioGroup @bind-SelectedOption="@pregTest.ValueInt">
                                 @foreach (var v in Enum.GetValues<TestResult>())
                                     {
-                                    <MudRadio Option="@v">@v.ToString()</MudRadio>
+                                    <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
                                     }
                             </MudRadioGroup>
                         </MudField>
@@ -88,20 +88,17 @@
                            @bind-Value="@mucusSensation.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Sensation</MudSlider>
 
-
-
-            </MudCardContent>
-            <MudCardContent Class="pa-0">
-                <MudSlider TickMarks="true" TickMarkLabels="@bleedingLables"
+                <MudSlider TickMarks="true" TickMarkLabels="@menstruationFlow.Labels"
                            Step="1"
-                           Min="1"
-                           Max="@bleedingLables.Length"
-                           Class="mb-4 pl-8 pr-8">Bleeding</MudSlider>
+                           Min="@menstruationFlow.Min"
+                           Max="@menstruationFlow.Max"
+                           @bind-Value="@menstruationFlow.ValueInt"
+                           Class="mb-4 pl-8 pr-8">Menstration</MudSlider>
 
             </MudCardContent>
 
             <MudCardContent Class=" mt-8">
-                <MudTextField T="string" Label="Notes" Text="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
+                <MudTextField Label="Notes" @bind-Value="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
             </MudCardContent>
             <MudCardActions>
                 <MudCheckBox @bind-Checked="@startCycle" Label="This Day Should Start a Cycle"></MudCheckBox>
@@ -126,7 +123,6 @@
     string[] errors = { };
 
     private bool startCycle { get; set; } = false;
-
 
     MudForm form;
 
@@ -171,16 +167,7 @@
     EnumSliderHelper<TestResult>? ovulationTest = null;
     EnumSliderHelper<MucusSensation>? mucusSensation = null;
     EnumSliderHelper<MucusCharacteristic>? mucusCharacteristic = null;
-
-
-    string[] clearBlueLabels = Enum.GetNames(typeof(ClearBlueResult)).ToArray();
-    string[] cervixOpenLabels = Enum.GetNames(typeof(CervixOpening)).ToArray();
-    string[] cervixFirmLabels = Enum.GetNames(typeof(CervixTexture)).ToArray();
-    string[] bleedingLables = Enum.GetNames(typeof(MenstruationFlow)).ToArray();
-    string[] pregTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
-    string[] ovulationTestLabels = Enum.GetNames(typeof(TestResult)).ToArray();
-    string[] mucusLabels = Enum.GetNames(typeof(MucusSensation)).ToArray();
-    string[] mucusCharLabels = Enum.GetNames(typeof(MucusCharacteristic)).ToArray();
+    EnumSliderHelper<MenstruationFlow>? menstruationFlow = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +179,7 @@
         ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
         mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
         mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day.MucusCharacteristic = q);
+        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
 
         if (string.IsNullOrEmpty(date))
         {
@@ -216,6 +204,7 @@
         ovulationTest.Value = Day.OvulationTest;
         mucusSensation.Value = Day.MucusSensation;
         mucusCharacteristic.Value = Day.MucusCharacteristic;
+        menstruationFlow.Value = Day.MenstruationFlow;
     }
 
     private async Task Save()
@@ -231,6 +220,7 @@
             Day.OvulationTest = ovulationTest.Value;
             Day.MucusSensation = mucusSensation.Value;
             Day.MucusCharacteristic = mucusCharacteristic.Value;
+            Day.MenstruationFlow = menstruationFlow.Value;
             form.Validate();
             if (form.IsValid)
             {
@@ -271,6 +261,7 @@
         ovulationTest.Value = Day.OvulationTest;
         mucusSensation.Value = Day.MucusSensation;
         mucusCharacteristic.Value = Day.MucusCharacteristic;
+        menstruationFlow.Value = Day.MenstruationFlow;
         startCycle = ChartingRepo.GetCycleDay(date) == 1;
         StateHasChanged();
     }
