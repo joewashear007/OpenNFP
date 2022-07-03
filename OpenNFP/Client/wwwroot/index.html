@@ -178,8 +178,12 @@
                 } else {
                     index = data.points[0].pointIndex[1]
                 }
-                console.info(`plotly click event` ,index)
-                dotNetObj.invokeMethodAsync('ClickEvent', index);
+                if (data.points[0].y === "Day") {
+                    console.info(`plotly click event`, index)
+                    dotNetObj.invokeMethodAsync('ClickEvent', index);
+                } else {
+                    console.info(`ignoring non day event ${data.points[0].y}`)
+                }
             })
         }
 

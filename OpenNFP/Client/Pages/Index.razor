@@ -11,7 +11,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     @foreach (var ci in cycles)
     {
-        <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true />
+        <div style="padding-top:15px;" >
+            <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true  />
+        </div>
     }
 </MudContainer>
 
@@ -25,16 +27,8 @@
         Console.WriteLine($"Index Render, Cycle Limit: {CycleLimit}, Count: {cycles.Count}");
         if (cycles.Count < CycleLimit)
         {
-            cycles.Clear();
-            foreach (var c in ChartingRepo.Cycles.Take(CycleLimit - cycles.Count))
-            {
-                if (c.Item != null)
-                {
-                    cycles.Add(c);
-                }
-            }
+            cycles.AddRange(ChartingRepo.Cycles.Take(CycleLimit - cycles.Count));
             StateHasChanged();
-            await Task.Delay(50);
         }
     }
 }
