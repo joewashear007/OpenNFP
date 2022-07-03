@@ -79,7 +79,7 @@
         {
             Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Loading Data");
             var days = await Repo.GetDayRecordsForCycleAsync(Cycle.StartDate, limit: LimitDays).ToListAsync();
-            var xDays = days.Select(q => q.Index).Cast<object>().ToList();
+            var xDays = days.Select(q => q.Item.Date.ToShortDateString() ?? "").Cast<object>().ToList();
             var ytempValues = days.Select(q => q.Item?.Temperature).Select(q => q < 90 ? null : q).Cast<object>().ToList();
 
             ITrace tempTrace = new Scatter
@@ -200,7 +200,7 @@
                     YRef = "y3",
                     X = q.Index,
                     Y = 0,
-                    Text = q.Index.ToString(),
+                    Text = (q.Index + 1).ToString(),
                     ShowArrow = false,
                     Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font()
                     {
@@ -208,7 +208,16 @@
                         Size = 14,
                     }
                 }));
-            
+
+
+            //layout.XAxis[0].TickMode = Plotly.Blazor.LayoutLib.XAxisLib.TickModeEnum.Linear;
+            //layout.XAxis[0].Tick0 = Cycle.StartDate.ToString("yyyy-MM-dd");
+            //layout.XAxis[0].DTick = 24 * 60 * 60 * 1000; //milliseconds
+            //layout.XAxis[0].GridColor = "red";
+            //layout.XAxis[0].GridWidth = 2;
+            //layout.XAxis[0].ShowGrid = true;
+            layout.XAxis[0].TickFormat = "%a %m/%d";
+
             StateHasChanged();
             await chart.React();
             if (_chartRef == null)
@@ -221,7 +230,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        int maxCycleLength = Cycle.Lenght ?? 10;
+        int maxCycleLength = Math.Max(Cycle.Lenght ?? 0, 10);
         if(LimitDays)
         {
             maxCycleLength = Math.Min(maxCycleLength, 40);
