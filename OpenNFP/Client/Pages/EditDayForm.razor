@@ -1,6 +1,5 @@
 ﻿@page "/editday/"
 @page "/editday/{date}"
-@using System.Text.Json
 
 @inject IChartingRepo ChartingRepo
 @inject ILocalStorageService localStorage
@@ -221,16 +220,16 @@
             Day.MucusSensation = mucusSensation.Value;
             Day.MucusCharacteristic = mucusCharacteristic.Value;
             Day.MenstruationFlow = menstruationFlow.Value;
-            form.Validate();
+            await form.Validate();
             if (form.IsValid)
             {
                 bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(Day.IndexKey);
                 Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
                 if(!startCycle && isAlreadyCycleStart)
                 {
-                    ChartingRepo.DeleteCycleAsync(Day.IndexKey);
+                    await ChartingRepo.DeleteCycleAsync(Day.IndexKey);
                 }
-                ChartingRepo.AddUpdateRecord(Day, startCycle);
+                await ChartingRepo.AddUpdateRecord(Day, startCycle);
                 uriHelper.NavigateTo(uriHelper.BaseUri);
                 await localStorage.SetItemAsync(Day.IndexKey, Day);
                 await localStorage.SetItemAsync("chart.settings", ChartingRepo.GetSettings());

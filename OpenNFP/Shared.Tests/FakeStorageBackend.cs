@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenNFP.Shared.Tests
 {
-    internal class FakeStorageBackend : IStorageBackend 
+    internal class FakeStorageBackend : IStorageBackend
     {
         private readonly Dictionary<string, object> _data = new();
 

@@ -1,5 +1,8 @@
 ﻿@using System.Net.Http
 @using System.Net.Http.Json
+@using System.IO
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
@@ -9,12 +12,10 @@
 @using OpenNFP.Client
 @using OpenNFP.Shared
 @using OpenNFP.Shared.Models
+@using OpenNFP.Shared.Interfaces
 @using OpenNFP.Client.Shared
 @using MudBlazor
-@using PSC.Blazor.Components.Chartjs
-@using PSC.Blazor.Components.Chartjs.Interfaces
-@using PSC.Blazor.Components.Chartjs.Models.Common
-@using PSC.Blazor.Components.Chartjs.Models.Line
 @using Blazored.LocalStorage
-@using System.Text.Json.Serialization
 @using System.Collections.Generic
+@using Plotly.Blazor.ConfigLib
+@using Plotly.Blazor.LayoutLib.AnnotationLib

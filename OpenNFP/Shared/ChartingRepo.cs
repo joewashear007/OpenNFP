@@ -1,4 +1,5 @@
-﻿using OpenNFP.Shared.Internal;
+﻿using OpenNFP.Shared.Interfaces;
+using OpenNFP.Shared.Internal;
 using OpenNFP.Shared.Models;
 using System.Text.Json;
 
@@ -206,6 +207,7 @@ namespace OpenNFP.Shared
             {
                 _settings = loadedSettings;
                 loadedSettings.Cycles.ForEach(q => _knownCycles.Add(q.StartDate.ToKey(), q));
+                await _computeCycleDays();
             }
             else
             {

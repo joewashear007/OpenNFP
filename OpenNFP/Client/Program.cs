@@ -5,7 +5,7 @@ using MudBlazor.Services;
 using OpenNFP.Shared;
 using OpenNFP.Shared.Models;
 using Blazored.LocalStorage;
-
+using OpenNFP.Shared.Interfaces;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -17,6 +17,7 @@ builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorageAsSingleton();
 builder.Services.AddSingleton<IStorageBackend, LocalStorageBackend>();
 builder.Services.AddSingleton<IChartingRepo, ChartingRepo>();
+builder.Services.AddSingleton<ICycleChartGenerator, CycleChartGenerator>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

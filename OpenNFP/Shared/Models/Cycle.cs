@@ -15,18 +15,21 @@ namespace OpenNFP.Shared.Models
         public DateTime? EndDate { get; set; } = null;
         public string Notes { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Calculated Length, it is inclusive of each date so it might be 1 more than expected
+        /// </summary>
         [JsonIgnore]
-        public int? Lenght
+        public int? Length
         {
             get
             {
                 if (EndDate.HasValue)
                 {
-                    return (int)(EndDate.Value - StartDate).TotalDays;
+                    return (int)Math.Floor((EndDate.Value.Date - StartDate.Date).TotalDays) + 1;
                 }
                 else
                 {
-                    return null;
+                    return 1;
                 }
             }
         }

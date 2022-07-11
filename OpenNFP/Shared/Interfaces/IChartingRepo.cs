@@ -1,6 +1,6 @@
 ﻿using OpenNFP.Shared.Models;
 
-namespace OpenNFP.Shared
+namespace OpenNFP.Shared.Interfaces
 {
     public interface IChartingRepo
     {

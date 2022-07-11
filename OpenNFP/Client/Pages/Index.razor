@@ -1,11 +1,6 @@
 ﻿@page "/"
 
 @inject NavigationManager MyNavigationManager
-
-@using PSC.Blazor.Components.Chartjs.Interfaces
-@using System.Text.Json.Serialization
-@using System.Collections.Generic
-
 @inject IChartingRepo ChartingRepo
 
 <MudContainer MaxWidth="MaxWidth.False">
@@ -22,13 +17,16 @@
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
     private int CycleLimit { get; set; } = 3;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnAfterRender(bool firstRender)
     {
-        Console.WriteLine($"Index Render, Cycle Limit: {CycleLimit}, Count: {cycles.Count}");
-        if (cycles.Count < CycleLimit)
+        if (firstRender)
         {
-            cycles.AddRange(ChartingRepo.Cycles.Take(CycleLimit - cycles.Count));
-            StateHasChanged();
+            Console.WriteLine($"Index Render, Cycle Limit: {CycleLimit}, Count: {cycles.Count}");
+            if (cycles.Count < CycleLimit)
+            {
+                cycles.AddRange(ChartingRepo.Cycles.Take(CycleLimit - cycles.Count));
+                StateHasChanged();
+            }
         }
     }
 }
