@@ -31,7 +31,7 @@ namespace OpenNFP.Shared
                     throw new InvalidOperationException("Day is null");
                 }
 
-                vm.Days.Add(day.Item.Date.ToShortDateString());
+                vm.Days.Add(day.Item.Date.ToString("yyyy-MM-dd"));
                 if (day.Item.Temperature > 90)
                 {
                     vm.Temp.Add(day.Item.Temperature);

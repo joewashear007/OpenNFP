@@ -105,16 +105,18 @@
         {
             new XAxis()
             {
-                Title = new Plotly.Blazor.LayoutLib.XAxisLib.Title { Text = "Cycle Days"},
                 Domain = new List<object>(){ 0,1 },
-                TickFormat = "%a %m/%d"
+                TickFormat = "%a %m/%d",
+                TickAngle = 90,
+                DTick = 86400000,
+                Type = Plotly.Blazor.LayoutLib.XAxisLib.TypeEnum.Date,                
             }
         },
             ClickMode = ClickModeFlag.Event,
             DragMode = DragModeEnum.False,
             Annotations = new List<Annotation>(),
             AutoSize = true,
-            Margin = new Plotly.Blazor.LayoutLib.Margin() { AutoExpand = false, Pad = 0, T = 1 },
+            Margin = new Plotly.Blazor.LayoutLib.Margin() { AutoExpand = true, Pad = 0, T = 1 },
             Height = 500,
         };
 
@@ -172,18 +174,18 @@
                 data.Add(hm);
                 data.Add(hmDate);
                 layout.Annotations.AddRange(viewModel.Monitor.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = i, Y = 0, Text = q, ShowArrow = false, Font = font }));
+                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
                 layout.Annotations.AddRange(viewModel.Cervix.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = i, Y = 1, Text = q, ShowArrow = false, Font = font }));
+                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 1, Text = q, ShowArrow = false, Font = font }));
                 layout.Annotations.AddRange(viewModel.Mucus.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = i, Y = 2, Text = q, ShowArrow = false, Font = font }));
+                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 2, Text = q, ShowArrow = false, Font = font }));
                 layout.Annotations.AddRange(viewModel.Mens.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = i, Y = 3, Text = q, ShowArrow = false, Font = font }));
-                
+                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
+
                 layout.Annotations.AddRange(viewModel.Index.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = i, Y = 0, Text = q, ShowArrow = false, Font = font }));
-                
-                
+                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
+
+
                 StateHasChanged();
                 await chart.React();
                 if (_chartRef == null)
@@ -199,8 +201,7 @@
 
         }
     }
-
-    protected override Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
         int maxCycleLength = Math.Max(Cycle?.Length ?? 0, 10);
         if (LimitDays)
@@ -208,9 +209,9 @@
             maxCycleLength = Math.Min(maxCycleLength, 40);
         }
         layout.Width = maxCycleLength * 50;
-        return Task.CompletedTask;
+        layout.XAxis[0].Range = new List<object> { Cycle.StartDate.AddHours(-12).ToString("yyyy-MM-dd"), Cycle.StartDate.AddDays(maxCycleLength).ToString("yyyy-MM-dd"), };
+        layout.XAxis[0].Tick0 = Cycle.StartDate.ToString("yyyy-MM-dd");
     }
-
 
 
     /// <summary>

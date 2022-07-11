@@ -21,7 +21,7 @@ namespace OpenNFP.Shared.Tests
 
             var vm = await generator.GetTracesAsync(DateTime.Today.AddDays(-10), false);
 
-            var days = Enumerable.Range(0, 11).Reverse().Select(q => DateTime.Today.AddDays(q * -1).ToShortDateString()).Cast<object>().ToList();
+            var days = Enumerable.Range(0, 11).Reverse().Select(q => DateTime.Today.AddDays(q * -1).ToString("yyyy-MM-dd")).Cast<object>().ToList();
             CollectionAssert.AreEqual(days, vm.Days);
 
             var monitor = new List<object> {
