@@ -13,6 +13,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 
+builder.Services.AddOidcAuthentication(options =>
+{
+    builder.Configuration.Bind("Local", options.ProviderOptions);
+});
+
 
 builder.Services.AddBlazoredLocalStorageAsSingleton();
 builder.Services.AddSingleton<IStorageBackend, LocalStorageBackend>();

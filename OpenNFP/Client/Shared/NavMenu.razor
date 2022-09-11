@@ -10,6 +10,7 @@
     <MudNavMenu>
         <MudNavLink Href="@(MyNavigationManager.BaseUri)" Match="NavLinkMatch.All">Dashboard</MudNavLink>
         <MudNavLink Href="@(MyNavigationManager.BaseUri + "/editday/" + DateTime.Today.ToKey())" Match="NavLinkMatch.Prefix">Edit Day</MudNavLink>
+        <MudNavLink Href="@(MyNavigationManager.BaseUri + "/sync")" Match="NavLinkMatch.All">Sync</MudNavLink>
         <MudNavGroup Title="Settings" Expanded="true">
             <MudNavLink OnClick="@ReloadDemoData">Reload Demo Data</MudNavLink>
             <MudNavLink OnClick="@Clear">Clear Data</MudNavLink>
