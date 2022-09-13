@@ -30,7 +30,7 @@ jobs:
       uses: visiosto/replace-value@v1.2.1
       with:
         file: build/wwwroot/appsettings.json
-        replaced: joewashear007.github.io/OpenNFP
+        replaced: joewashear007.github.io\/OpenNFP
         value: opennfp.z20.web.core.windows.net
       
     - name: Upload to blob storage
