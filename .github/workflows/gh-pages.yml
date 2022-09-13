@@ -9,6 +9,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZSTORAGEACCOUNT }}
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -23,3 +26,18 @@ jobs:
         BRANCH: gh-pages # The branch the action should deploy to.
         FOLDER: build/wwwroot # The folder the action should deploy.
         SINGLE_COMMIT: true
+    - name: Upload to blob storage
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+            az storage blob upload-batch --account-name opennfp --auth-mode key -d '$web' -s build/wwwroot/*
+    #- name: Purge CDN endpoint
+    #  uses: azure/CLI@v1
+    #  with:
+    #    inlineScript: |
+    #       az cdn endpoint purge --content-paths  "/*" --profile-name "CDN_PROFILE_NAME" --name "CDN_ENDPOINT" --resource-group "RESOURCE_GROUP"
+    # Azure logout
+    - name: logout
+      run: |
+            az logout
+      if: always()
