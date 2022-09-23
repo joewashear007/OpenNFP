@@ -16,6 +16,8 @@ builder.Services.AddMudServices();
 builder.Services.AddOidcAuthentication(options =>
 {
     builder.Configuration.Bind("Local", options.ProviderOptions);
+    options.ProviderOptions.DefaultScopes.Add("email");
+    options.ProviderOptions.DefaultScopes.Add("https://www.googleapis.com/auth/drive");
 });
 
 

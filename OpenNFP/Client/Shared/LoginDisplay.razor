@@ -5,17 +5,30 @@
 
 <AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity.Name!
-        <button class="nav-link btn btn-link" @onclick="BeginSignOut">
-            Log out
-        </button>
+        <MudCard>
+            <MudCardHeader>
+                Hello, @context.User.Identity.Name!
+            </MudCardHeader>
+            <MudCardContent>
+                You are signed into Google!
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton OnClick="BeginSignOut" Color="Color.Warning" >Sign Out</MudButton>
+            </MudCardActions>
+        </MudCard>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login">Log in</a>
+        <MudButton Href="authentication/login" Color="Color.Primary">Sign in</MudButton>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    private JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
+    {
+        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+        WriteIndented = true,
+    };
+
     private async Task BeginSignOut(MouseEventArgs args)
     {
         await SignOutManager.SetSignOutState();

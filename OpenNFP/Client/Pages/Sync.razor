@@ -1,9 +1,184 @@
 ﻿@page "/sync"
+@using Google.Apis.Auth.OAuth2
+@using Google.Apis.Auth.OAuth2.Flows
+@using Google.Apis.Auth.OAuth2.Responses
+@using Google.Apis.Drive.v3
+@using Google.Apis.Drive.v3.Data
+@using Google.Apis.Http
+@using Google.Apis.Services
+@using Google.Apis.Upload
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Net.Http.Headers
+@inject IAccessTokenProvider TokenProvider
+@inject NavigationManager navManger
+@inject HttpClient client;
+@inject IChartingRepo repo;
+@inject IDialogService DialogService;
 
 
-<h3>Sync</h3>
-<LoginDisplay />
+<PageTitle>Sync Data To Google Drive</PageTitle>
 
+<MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
+
+    <LoginDisplay />
+
+    <AuthorizeView>
+        <Authorized>
+            <MudCard>
+                <MudCardHeader>
+                    Hello, @context.User.Identity.Name!
+                </MudCardHeader>
+                <MudCardContent>
+                    <pre>
+                        @if (_loading)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Large" Indeterminate="true" />
+                            <MudText Class="ms-2">Loading File Info</MudText>
+                        }
+                        else
+                        {
+                        <h3>Name = @File.Name</h3>
+                        <p>Date Modified = @File.ModifiedTime<br />
+                            Date Created = @File.CreatedTime<br />
+                            Size = @(File.Size / 1024) KB<br />
+                           Id = @File.Id<br />
+                         </p>
+                        }
+                    </pre>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton OnClick="refreshFileInfo" Variant="Variant.Filled" Color="Color.Primary">
+                        @if (_loading)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Refresh</MudText>
+                        }
+                    </MudButton>
+                    <MudButton OnClick="SyncData" Variant="Variant.Filled" Color="Color.Primary">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Sync</MudText>
+                        }
+                    </MudButton>
+
+                </MudCardActions>
+            </MudCard>
+        </Authorized>
+        <NotAuthorized>
+            <p>Please Sign into Google To Sync</p>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</MudContainer>
 @code {
+    private bool _processing = false;
+    private bool _loading = false;
 
+    Google.Apis.Drive.v3.Data.File File { get; set; } = new Google.Apis.Drive.v3.Data.File();
+
+    public class MyHttpInit : IConfigurableHttpClientInitializer
+    {
+        public MyHttpInit(string token)
+        {
+            Token = token;
+        }
+        public string Token { get; }
+        void Initialize(ConfigurableHttpClient httpClient)
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + Token);
+        }
+
+        void IConfigurableHttpClientInitializer.Initialize(ConfigurableHttpClient httpClient)
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + Token);
+        }
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await refreshFileInfo();
+        }
+    }
+
+    private async Task<DriveService?> getDriveService()
+    {
+        AccessTokenRequestOptions options = new AccessTokenRequestOptions()
+            {
+                Scopes = new List<string>() { "openid", "profile", "email", "https://www.googleapis.com/auth/drive" }
+            };
+        var tokenResult = await TokenProvider.RequestAccessToken(options);
+        if (tokenResult.TryGetToken(out var token))
+        {
+            return new DriveService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = new MyHttpInit(token.Value),
+                    ApplicationName = "OpenNFP",
+                    GZipEnabled = false
+                });
+        }
+        return null;
+    }
+
+    private async Task refreshFileInfo()
+    {
+        _loading = true;
+        StateHasChanged();
+        Console.WriteLine($"Fetching File Data From Google ... ");
+        DriveService? service = await getDriveService();
+        if (service != null)
+        {
+            var listRequest = service.Files.List();
+            listRequest.Q = "name='opennfp.json'";
+            listRequest.Fields = "files(id,name,createdTime,modifiedTime,size)";
+            var rawfiles = await listRequest.ExecuteAsync();
+            File = rawfiles.Files.First();
+        }
+        _loading = false;
+        StateHasChanged();
+    }
+
+    public async Task SyncData()
+    {
+        _processing = true;
+        DriveService? service = await getDriveService();
+        if (service != null)
+        {
+            var fileMetadata = new Google.Apis.Drive.v3.Data.File() { Name = "opennfp.json" };
+            using var stream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(repo.ExportModel));
+            // Create a new file, with metadata and stream.
+            ResumableUpload<Google.Apis.Drive.v3.Data.File, Google.Apis.Drive.v3.Data.File> request;
+            if (!string.IsNullOrEmpty(File.Id))
+            {
+                var uploadrequest = service.Files.Update(fileMetadata, File.Id, stream, "application/json");
+                request = uploadrequest;
+            }
+            else
+            {
+                var createrequest = service.Files.Create(fileMetadata, stream, "application/json");
+                createrequest.Fields = "id";
+                request = createrequest;
+            }
+
+            IUploadProgress uploadRsq = await request.UploadAsync();
+            Console.WriteLine(uploadRsq.Status);
+
+            await refreshFileInfo();
+
+            _processing = false;
+            await DialogService.ShowMessageBox("Sync Success", "Saved data to Gooogle drive");
+
+        }
+    }
 }
