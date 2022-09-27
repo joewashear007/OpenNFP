@@ -8,7 +8,14 @@
 
 <MudLayout>
     <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        @if (uriHelper.Uri.Contains("editday"))
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        }
         OpenNFP
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
@@ -17,7 +24,7 @@
         <NavMenu />
     </MudDrawer>
     <MudMainContent>
-        <MudContainer Fixed="true" >
+        <MudContainer Fixed="true">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -29,6 +36,11 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private void Home()
+    {
+        uriHelper.NavigateTo("/");
     }
 
     private void AddDay()
