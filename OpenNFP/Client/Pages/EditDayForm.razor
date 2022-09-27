@@ -8,7 +8,7 @@
 <PageTitle>Edit Page: @date (Cycle Day: #)</PageTitle>
 
 <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
-    @if (Day != null)
+    @if (Day is not null)
     {
         <MudCard>
             <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
@@ -33,78 +33,86 @@
                                 <MudRadioGroup @bind-SelectedOption="@ovulationTest.ValueInt">
                                     @foreach (var v in Enum.GetValues<TestResult>())
                                     {
-                                    <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
+                                        <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
                                     }
-                            </MudRadioGroup>
-                        </MudField>
-                    </MudItem>
-                    <MudItem md="6">
-                        <MudField Label="Pregancy Test">
-                            <MudRadioGroup @bind-SelectedOption="@pregTest.ValueInt">
-                                @foreach (var v in Enum.GetValues<TestResult>())
+                                </MudRadioGroup>
+                            </MudField>
+                        </MudItem>
+                        <MudItem md="6">
+                            <MudField Label="Pregancy Test">
+                                <MudRadioGroup @bind-SelectedOption="@pregTest.ValueInt">
+                                    @foreach (var v in Enum.GetValues<TestResult>())
                                     {
-                                    <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
+                                        <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
                                     }
-                            </MudRadioGroup>
-                        </MudField>
-                    </MudItem>
-                </MudGrid>
-            </MudCardContent>
+                                </MudRadioGroup>
+                            </MudField>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
 
-            <MudCardContent Class="pa-0">
-                <MudSlider TickMarks="true" TickMarkLabels="@clearblue.Labels"
+                <MudCardContent Class="pa-0">
+                    <MudSlider TickMarks="true" TickMarkLabels="@clearblue.Labels"
                            Step="1"
                            Min="@clearblue.Min"
                            Max="@clearblue.Max"
                            @bind-Value="@clearblue.ValueInt"
                            Class="mb-4 pl-8 pr-8">ClearBlue Monitor Value</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@cervixTexture.Labels"
+                    <MudSlider TickMarks="true" TickMarkLabels="@cervixTexture.Labels"
                            Step="1"
                            Min="@cervixTexture.Min"
                            Max="@cervixTexture.Max"
                            @bind-Value="@cervixTexture.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Firmness</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@cervixOpening.Labels"
+                    <MudSlider TickMarks="true" TickMarkLabels="@cervixOpening.Labels"
                            Step="1"
                            Min="@cervixOpening.Min"
                            Max="@cervixOpening.Max"
                            @bind-Value="@cervixOpening.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Openness</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@mucusCharacteristic.Labels"
+                    <MudSlider TickMarks="true" TickMarkLabels="@mucusCharacteristic.Labels"
                            Step="1"
                            Min="@mucusCharacteristic.Min"
                            Max="@mucusCharacteristic.Max"
                            @bind-Value="@mucusCharacteristic.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Characteristic</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@mucusSensation.Labels"
+                    <MudSlider TickMarks="true" TickMarkLabels="@mucusSensation.Labels"
                            Step="1"
                            Min="@mucusSensation.Min"
                            Max="@mucusSensation.Max"
                            @bind-Value="@mucusSensation.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Sensation</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@menstruationFlow.Labels"
+                    <MudSlider TickMarks="true" TickMarkLabels="@menstruationFlow.Labels"
                            Step="1"
                            Min="@menstruationFlow.Min"
                            Max="@menstruationFlow.Max"
                            @bind-Value="@menstruationFlow.ValueInt"
                            Class="mb-4 pl-8 pr-8">Menstration</MudSlider>
 
-            </MudCardContent>
+                </MudCardContent>
 
-            <MudCardContent Class=" mt-8">
-                <MudTextField Label="Notes" @bind-Value="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
-            </MudCardContent>
-            <MudCardActions>
-                <MudCheckBox @bind-Checked="@startCycle" Label="This Day Should Start a Cycle"></MudCheckBox>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(() => Save())">Save</MudButton>
-            </MudCardActions>
-        </MudForm>
-    </MudCard>
+                <MudCardContent Class=" mt-8">
+                    <MudTextField Label="Notes" @bind-Value="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
+                </MudCardContent>
+
+                <MudCardContent Class=" mt-8">
+                    <MudCheckBox @bind-Checked="@startCycle" Label="This Day Should Start a Cycle"></MudCheckBox>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" FullWidth="true" OnClick="Save">Save</MudButton>
+
+                </MudCardActions>
+                <MudCardContent Class=" mt-8">
+                    <MudText>Last Modified on @Day.ModifiedOn.ToLocalTime().ToString("g")</MudText>
+                </MudCardContent>
+            </MudForm>
+        </MudCard>
     }
     else
     {
@@ -116,14 +124,14 @@
     [Parameter]
     public string date { get; set; } = string.Empty;
 
-    DateTime? dateVal { get; set; }
-    DayRecord? Day { get; set; } = null;
-    bool success;
+    DateTime dateVal { get; set; } = DateTime.Today;
+    DayRecord? Day { get; set; } = null!;
+    bool success = true;
     string[] errors = { };
 
     private bool startCycle { get; set; } = false;
 
-    MudForm form;
+    MudForm form = null!;
 
     class EnumSliderHelper<T> where T : struct, Enum
     {
@@ -168,42 +176,34 @@
     EnumSliderHelper<MucusCharacteristic>? mucusCharacteristic = null;
     EnumSliderHelper<MenstruationFlow>? menstruationFlow = null;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
-        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
-        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day.CervixTexture = q);
-        flow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
-        pregTest = new EnumSliderHelper<TestResult>(q => Day.PregnancyTest = q);
-        ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
-        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
-        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day.MucusCharacteristic = q);
-        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
+        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day!.ClearBlueResult = q);
+        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day!.CervixOpening = q);
+        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day!.CervixTexture = q);
+        flow = new EnumSliderHelper<MenstruationFlow>(q => Day!.MenstruationFlow = q);
+        pregTest = new EnumSliderHelper<TestResult>(q => Day!.PregnancyTest = q);
+        ovulationTest = new EnumSliderHelper<TestResult>(q => Day!.OvulationTest = q);
+        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day!.MucusSensation = q);
+        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day!.MucusCharacteristic = q);
+        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day!.MenstruationFlow = q);
+    }
 
-        if (string.IsNullOrEmpty(date))
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            date = DateTime.Today.ToKey();
-            dateVal = DateTime.Today;
-            Day = new DayRecord() { Date = dateVal.Value };
-            startCycle = false;
+            if (string.IsNullOrEmpty(date))
+            {
+                date = DateTime.Today.ToKey();
+                dateVal = DateTime.Today;
+            }
+            else
+            {
+                dateVal = date.ToDateTime().GetValueOrDefault();
+            }
+            await ChangeDate(dateVal);
         }
-        else
-        {
-            dateVal = date.ToDateTime();
-            Day = await ChartingRepo.GetDayAsync(date);
-            startCycle = ChartingRepo.GetCycleDay(date) == 1;
-        }
-
-        clearblue.Value = Day.ClearBlueResult;
-        clearblue.Value = Day.ClearBlueResult;
-        cervixOpening.Value = Day.CervixOpening;
-        cervixTexture.Value = Day.CervixTexture;
-        flow.Value = Day.MenstruationFlow;
-        pregTest.Value = Day.PregnancyTest;
-        ovulationTest.Value = Day.OvulationTest;
-        mucusSensation.Value = Day.MucusSensation;
-        mucusCharacteristic.Value = Day.MucusCharacteristic;
-        menstruationFlow.Value = Day.MenstruationFlow;
     }
 
     private async Task Save()
@@ -225,7 +225,7 @@
             {
                 bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(Day.IndexKey);
                 Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
-                if(!startCycle && isAlreadyCycleStart)
+                if (!startCycle && isAlreadyCycleStart)
                 {
                     await ChartingRepo.DeleteCycleAsync(Day.IndexKey);
                 }
@@ -244,12 +244,12 @@
     private async Task ChangeDate(DateTime? d)
     {
         Console.WriteLine($"Changeing Date: {d}");
-        dateVal = d;
+        dateVal = d.GetValueOrDefault();
         date = dateVal.ToKey();
         Day = await ChartingRepo.GetDayAsync(date);
         if (Day == null)
         {
-            Day = new DayRecord() { Date = dateVal.Value };
+            Day = new DayRecord() { Date = dateVal };
         }
         clearblue.Value = Day.ClearBlueResult;
         clearblue.Value = Day.ClearBlueResult;

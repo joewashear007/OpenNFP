@@ -1,14 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace OpenNFP.Shared.Models
 {
     public class DayRecord
     {
+        private DateTime _date = DateTime.Today.Date;
+        private decimal? _temperature;
+        private ClearBlueResult _clearBlueResult = ClearBlueResult.Unknown;
+        private bool _coitus = false;
+        private TestResult _pregnancyTest = TestResult.Unknown;
+        private TestResult _ovulationTest = TestResult.Unknown;
+        private CervixOpening _cervixOpening = CervixOpening.Unknown;
+        private CervixTexture _cervixTexture = CervixTexture.Unknown;
+        private MucusSensation _mucusSensation = MucusSensation.Unknown;
+        private MucusCharacteristic _mucusCharacteristic = MucusCharacteristic.Unknown;
+        private MenstruationFlow _menstruationFlow = MenstruationFlow.Unknown;
+        private string _notes = "";
+
         public DayRecord()
         {
             _date = DateTime.Today;
@@ -23,7 +31,16 @@ namespace OpenNFP.Shared.Models
             _date = key.ToDateTime() ?? DateTime.Today;
         }
 
-        private DateTime _date = DateTime.Today.Date;
+        /// <summary>
+        /// The time the record was modifed, should be in UTC time
+        /// </summary>
+        /// <remarks>This property should be read/write last by serilizer to properly set value</remarks>
+        [JsonPropertyOrder(1000)]
+        public DateTime ModifiedOn { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// The Date of the Record
+        /// </summary>
         public DateTime Date
         {
             get => _date;
@@ -32,23 +49,66 @@ namespace OpenNFP.Shared.Models
                 if (value != _date)
                 {
                     _date = value.Date;
+                    ModifiedOn = DateTime.UtcNow;
                 }
             }
         }
 
-        public decimal? Temperature { get; set; }
-        public ClearBlueResult ClearBlueResult { get; set; } = ClearBlueResult.Unknown;
-        public bool Coitus { get; set; } = false;
-        public TestResult PregnancyTest { get; set; } = TestResult.Unknown;
-        public TestResult OvulationTest { get; set; } = TestResult.Unknown;
-        public CervixOpening CervixOpening { get; set; } = CervixOpening.Unknown;
-        public CervixTexture CervixTexture { get; set; } = CervixTexture.Unknown;
-
-        public MucusSensation MucusSensation { get; set; } = MucusSensation.Unknown;
-        public MucusCharacteristic MucusCharacteristic { get; set; } = MucusCharacteristic.Unknown;
-
-        public MenstruationFlow MenstruationFlow { get; set; } = MenstruationFlow.Unknown;
-        public string Notes { get; set; } = "";
+        public decimal? Temperature
+        {
+            get => _temperature;
+            set { if (value != _temperature) { _temperature = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public ClearBlueResult ClearBlueResult
+        {
+            get => _clearBlueResult;
+            set { if (value != _clearBlueResult) { _clearBlueResult = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public bool Coitus
+        {
+            get => _coitus;
+            set { if (value != _coitus) { _coitus = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public TestResult PregnancyTest
+        {
+            get => _pregnancyTest;
+            set { if (value != _pregnancyTest) { _pregnancyTest = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public TestResult OvulationTest
+        {
+            get => _ovulationTest;
+            set { if (value != _ovulationTest) { _ovulationTest = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public CervixOpening CervixOpening
+        {
+            get => _cervixOpening;
+            set { if (value != _cervixOpening) { _cervixOpening = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public CervixTexture CervixTexture
+        {
+            get => _cervixTexture;
+            set { if (value != _cervixTexture) { _cervixTexture = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public MucusSensation MucusSensation
+        {
+            get => _mucusSensation;
+            set { if (value != _mucusSensation) { _mucusSensation = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public MucusCharacteristic MucusCharacteristic
+        {
+            get => _mucusCharacteristic;
+            set { if (value != _mucusCharacteristic) { _mucusCharacteristic = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public MenstruationFlow MenstruationFlow
+        {
+            get => _menstruationFlow;
+            set { if (value != _menstruationFlow) { _menstruationFlow = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+        public string Notes
+        {
+            get => _notes;
+            set { if (value != _notes) { _notes = value; ModifiedOn = DateTime.UtcNow; } }
+        }
 
         [JsonIgnore]
         public string IndexKey => _date.ToKey();
