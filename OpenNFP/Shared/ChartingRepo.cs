@@ -20,7 +20,7 @@ namespace OpenNFP.Shared
             get
             {
                 return _knownCycles.Values.Reverse()
-                    .Select((v, i) => new CycleIndex<Cycle>() { Index = i + 1, Item = v })
+                    .Select((v, i) => new CycleIndex<Cycle>() { Index = _knownCycles.Count - i, Item = v })
                     .ToList();
             }
         }
@@ -31,6 +31,7 @@ namespace OpenNFP.Shared
             Records = _dayRepo.Values.ToList()
         };
 
+        public int CycleCount => _knownCycles.Count;
 
         public ChartingRepo(IStorageBackend storage)
         {

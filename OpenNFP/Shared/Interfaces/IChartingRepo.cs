@@ -4,6 +4,7 @@ namespace OpenNFP.Shared.Interfaces
 {
     public interface IChartingRepo
     {
+        int CycleCount { get; }
         IEnumerable<CycleIndex<Cycle>> Cycles { get; }
 
         ImportExportView ExportModel { get; }

@@ -21,19 +21,20 @@
         <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----") [Cycle Length: @(Cycle.Length) @(LimitDays && Cycle.Length > 40 ? "Limited to 40 Days": "") ]</MudText>
     </MudCardHeader>
     <MudCardContent Class="p-0">
+        @if (Loading)
+        {
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="60px" />
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="200px" />
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
+            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
+        } else {
         <div style="overflow-x:scroll; overflow-y:hidden; padding-bottom:20px">
 
-            <PlotlyChart hidden="@(data.Count > 0)"
-                         @bind-Config="config"
+            <PlotlyChart @bind-Config="config"
                          @bind-Layout="layout"
                          @bind-Data="data"
                          @ref="chart" />
         </div>
-        @if (data.Count == 0)
-        {
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="10px" />
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
         }
     </MudCardContent>
 </MudCard>
@@ -49,7 +50,7 @@
     [Parameter]
     public bool LimitDays { get; set; } = false;
 
-
+    public bool Loading { get; set; } = true;
     private PlotlyChart? chart;
     private DotNetObjectReference<CycleChart>? _chartRef;
     private Config config = new()
@@ -124,6 +125,7 @@
     {
         if (firstRender)
         {
+            await Task.Delay(100);
             Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Loading Data");
             if (Cycle != null)
             {
@@ -185,7 +187,7 @@
                 layout.Annotations.AddRange(viewModel.Index.Annotations
                     .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
 
-
+                Loading = false;
                 StateHasChanged();
                 await chart.React();
                 if (_chartRef == null)

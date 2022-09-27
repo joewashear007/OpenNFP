@@ -6,27 +6,52 @@
 <MudContainer MaxWidth="MaxWidth.False">
     @foreach (var ci in cycles)
     {
-        <div style="padding-top:15px;" >
-            <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true  />
+        <div style="padding-top:15px;">
+            <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true />
         </div>
+    }
+
+    @if (!AllCyclesLoaded)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="my-auto mx-4" FullWidth="true" OnClick="LoadNext">
+            @if (Loading)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Loading ...</MudText>
+            }
+            else
+            {
+                <MudText>Load More Charts</MudText>
+            }
+        </MudButton>
     }
 </MudContainer>
 
 @code {
 
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
-    private int CycleLimit { get; set; } = 3;
+    private bool AllCyclesLoaded { get; set; } = false;
+    private bool Loading { get; set; } = true;
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            Console.WriteLine($"Index Render, Cycle Limit: {CycleLimit}, Count: {cycles.Count}");
-            if (cycles.Count < CycleLimit)
-            {
-                cycles.AddRange(ChartingRepo.Cycles.Take(CycleLimit - cycles.Count));
-                StateHasChanged();
-            }
+            await LoadNext();
+            StateHasChanged();
         }
+    }
+
+    public async Task LoadNext()
+    {
+        Loading = true;
+        await Task.Delay(100);
+        int currentCount = cycles.Count;
+        foreach (var cycle in ChartingRepo.Cycles.Skip(currentCount).Take(3))
+        {
+            cycles.Add(cycle);
+        }
+        AllCyclesLoaded = cycles.Count == ChartingRepo.CycleCount;
+        Loading = false;
     }
 }
