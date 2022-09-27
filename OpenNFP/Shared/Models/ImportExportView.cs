@@ -9,7 +9,12 @@ namespace OpenNFP.Shared.Models
 {
     public class ImportExportView
     {
-        public List<Cycle> Cycles { get; set; }
-        public List<DayRecord> Records { get; set; }
+        public List<Cycle> Cycles { get; set; } = new List<Cycle>();
+        public List<DayRecord> Records { get; set; } = new List<DayRecord>();
+
+        public override string ToString()
+        {
+            return $"Cycles: {Cycles.Count}, Records: {Records.Count}";
+        }
     }
 }
