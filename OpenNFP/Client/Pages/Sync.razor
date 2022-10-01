@@ -166,7 +166,7 @@
             var inErr = e;
             do {
                 ErrorMsg += inErr.Message + Environment.NewLine;
-                inErr = e.InnerException;
+                inErr = inErr.InnerException;
             } while (inErr != null);
             ErrorMsg += e.StackTrace;
         }
