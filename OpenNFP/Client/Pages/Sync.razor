@@ -44,7 +44,7 @@
                         <li>Date Modified = @File.SyncTimeStamp</li>
                         <li>Size = @File.FileSizeKb KB</li>
                         <li>Id = @File.FileId</li>
-                                    </ul>
+                                            </ul>
                         }
                     </pre>
                     <pre>
@@ -129,10 +129,21 @@
 
     private async Task refreshFileInfo()
     {
-        _loading = true;
-        File = await remoteStorageBackend.GetLastSyncInfo();
-        _loading = false;
-        StateHasChanged();
+        try
+        {
+            _loading = true;
+            File = await remoteStorageBackend.GetLastSyncInfo();
+            StateHasChanged();
+        }
+
+        catch (Exception e)
+        {
+            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     public async Task WriteData()
@@ -146,9 +157,14 @@
             _processing = false;
             await DialogService.ShowMessageBox("Sync Success", "Saved data to Gooogle drive");
         }
+
         catch (Exception e)
         {
             ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
+        finally
+        {
+            _processing = false;
         }
     }
 
@@ -159,16 +175,20 @@
             _processing = true;
             var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
             FileContent = data?.ToString();
-            _processing = false;
         }
         catch (Exception e)
         {
             var inErr = e;
-            do {
+            do
+            {
                 ErrorMsg += inErr.Message + Environment.NewLine;
                 inErr = inErr.InnerException;
             } while (inErr != null);
             ErrorMsg += e.StackTrace;
+        }
+        finally
+        {
+            _processing = false;
         }
     }
     public async Task SyncData()
@@ -186,6 +206,10 @@
         catch (Exception e)
         {
             ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
+        finally
+        {
+            _processing = false;
         }
     }
 }
