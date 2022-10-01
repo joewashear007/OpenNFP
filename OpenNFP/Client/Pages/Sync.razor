@@ -28,7 +28,7 @@
         <Authorized>
             <MudCard>
                 <MudCardHeader>
-                    Hello, @context.User.Identity.Name!
+                    Hello, @context.User.Identity.Name! Your Last Sync was on @(repo.GetSettings().LastSyncDate.ToString("g"))
                 </MudCardHeader>
                 <MudCardContent>
                     <pre>
@@ -41,10 +41,10 @@
                         {
                         <h3>Name = @File.FileName</h3>
                         <ul>
-                            <li>Date Modified = @File.SyncTimeStamp</li>
-                            <li>Size = @File.FileSizeKb KB</li>
-                            <li>Id = @File.FileId</li>
-                        </ul>
+                        <li>Date Modified = @File.SyncTimeStamp</li>
+                        <li>Size = @File.FileSizeKb KB</li>
+                        <li>Id = @File.FileId</li>
+                                    </ul>
                         }
                     </pre>
                     <pre>
@@ -52,7 +52,7 @@
                     </pre>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton OnClick="refreshFileInfo" Variant="Variant.Filled" Color="Color.Primary">
+                    <MudButton OnClick="refreshFileInfo" Variant="Variant.Text" Color="Color.Primary">
                         @if (_loading)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -63,7 +63,18 @@
                             <MudText>Refresh</MudText>
                         }
                     </MudButton>
-                    <MudButton OnClick="ReadData" Variant="Variant.Outlined" Color="Color.Primary">
+                    <MudButton OnClick="SyncData" Variant="Variant.Text" Color="Color.Tertiary">
+                        @if (_loading)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Sync</MudText>
+                        }
+                    </MudButton>
+                    <MudButton OnClick="ReadData" Variant="Variant.Text" Color="Color.Primary">
                         @if (_processing)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -74,7 +85,7 @@
                             <MudText>Download</MudText>
                         }
                     </MudButton>
-                    <MudButton OnClick="WriteData" Variant="Variant.Outlined" Color="Color.Secondary">
+                    <MudButton OnClick="WriteData" Variant="Variant.Text" Color="Color.Secondary">
                         @if (_processing)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -94,6 +105,11 @@
         </NotAuthorized>
     </AuthorizeView>
 
+    <br />
+    <code>
+        @ErrorMsg
+    </code>
+
 </MudContainer>
 @code {
     private bool _processing = false;
@@ -101,6 +117,7 @@
 
     SyncInfo File { get; set; } = SyncInfo.Empty;
     string FileContent { get; set; } = string.Empty;
+    string ErrorMsg { get; set; } = string.Empty;
 
     protected override async void OnAfterRender(bool firstRender)
     {
@@ -120,19 +137,50 @@
 
     public async Task WriteData()
     {
-        _processing = true;
-        await remoteStorageBackend.WriteAsync(File, repo.ExportModel);
-        await refreshFileInfo();
+        try
+        {
+            _processing = true;
+            await remoteStorageBackend.WriteAsync(File, repo.ExportModel);
+            await refreshFileInfo();
 
-        _processing = false;
-        await DialogService.ShowMessageBox("Sync Success", "Saved data to Gooogle drive");
+            _processing = false;
+            await DialogService.ShowMessageBox("Sync Success", "Saved data to Gooogle drive");
+        }
+        catch (Exception e)
+        {
+            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
     }
 
     public async Task ReadData()
     {
-        _processing = true;
-        var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
-        FileContent = data?.ToString();
-        _processing = false;
+        try
+        {
+            _processing = true;
+            var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
+            FileContent = data?.ToString();
+            _processing = false;
+        }
+        catch (Exception e)
+        {
+            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
+    }
+    public async Task SyncData()
+    {
+        try
+        {
+            _processing = true;
+            var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
+            if (data != null)
+            {
+                await repo.SyncAsync(data);
+            }
+            _processing = false;
+        }
+        catch (Exception e)
+        {
+            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
     }
 }

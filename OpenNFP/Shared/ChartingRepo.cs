@@ -224,7 +224,11 @@ namespace OpenNFP.Shared
             {
                 StartDate = _settings.StartDate,
                 EndDate = _settings.EndDate,
-                Cycles = _knownCycles.Values.ToList()
+                Cycles = _knownCycles.Values.ToList(),
+                LastSyncDate = _settings.LastSyncDate,
+                CycleDisplayLimit = _settings.CycleDisplayLimit,
+                MergeAutoCycleLimit = _settings.MergeAutoCycleLimit,
+                Version = _settings.Version
             };
         }
 
@@ -234,6 +238,32 @@ namespace OpenNFP.Shared
             _knownCycles.Clear();
             _cycleDayMap.Clear();
             _dayRepo.Clear();
+        }
+
+        public async Task SyncAsync(ImportExportView secondaryData)
+        {
+            var changedRecords = secondaryData.Records.Where(q => q.ModifiedOn > _settings.LastSyncDate);
+            foreach (var record in changedRecords)
+            {
+                if (await _dayRepo.ExistsAsync(record.IndexKey))
+                {
+                    // Both records have been modified after the sync timestamps
+                    // currently taken the newest record, make this option later
+                    var oldRec = await _dayRepo.GetAsync(record.IndexKey);
+                    if (record.ModifiedOn > oldRec.ModifiedOn)
+                    {
+                        await _addUpdateRecordInternalAsync(record, false);
+                    }
+                }
+                else
+                {
+                    await _addUpdateRecordInternalAsync(record, false);
+                }
+            }
+
+            await _computeCycleDays();
+            _settings.LastSyncDate = DateTime.UtcNow;
+            await _storage.WriteAsync(SETTING_KEY, _settings);
         }
     }
 }

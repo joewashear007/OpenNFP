@@ -29,5 +29,7 @@ namespace OpenNFP.Shared.Interfaces
 
         bool IsCycleStart(string date);
 
+        Task SyncAsync(ImportExportView secondaryData);
+
     }
 }

@@ -1,3 +1,5 @@
+using OpenNFP.Shared.Models;
+
 namespace OpenNFP.Shared.Tests
 {
     [TestClass]
@@ -37,6 +39,140 @@ namespace OpenNFP.Shared.Tests
             Assert.AreEqual(1, repo.Cycles.Count());
             // 10 day + today since we don't add today
             Assert.AreEqual(11, await repo.GetDayRecordsForCycleAsync(DateTime.Today.AddDays(-10), false).CountAsync());
+        }
+
+        [TestMethod]
+        public async Task Sync_AllDiffernceDays()
+        {
+            ;
+            ChartingRepo repo = new(new FakeStorageBackend());
+            var syncTime = repo.GetSettings().LastSyncDate;
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), });
+
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend());
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-4), });
+
+            await repo.SyncAsync(secondaryRepo.ExportModel);
+
+            Assert.AreEqual(1, repo.Cycles.Count());
+            Assert.AreEqual(5, repo.ExportModel.Records.Count);
+            Assert.IsTrue(repo.GetSettings().LastSyncDate > syncTime, $"Sync Time {repo.GetSettings().LastSyncDate} should be greater than {syncTime}");
+        }
+
+        [TestMethod]
+        public async Task Sync_SameDaysSecondaryNewer()
+        {
+            ChartingRepo repo = new(new FakeStorageBackend());
+            var syncTime = repo.GetSettings().LastSyncDate;
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 98.6M, ModifiedOn = DateTime.UtcNow.AddHours(-2) });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), });
+
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend());
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 99.0M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), });
+
+            await repo.SyncAsync(secondaryRepo.ExportModel);
+
+            var conflictDay = await repo.GetDayAsync(DateTime.Today.AddDays(-1).ToKey());
+            Assert.AreEqual(99.0M, conflictDay.Temperature);
+            Assert.IsTrue(repo.GetSettings().LastSyncDate > syncTime, $"Sync Time {repo.GetSettings().LastSyncDate} should be greater than {syncTime}");
+        }
+
+
+        [TestMethod]
+        public async Task Sync_SameDaysSecondaryOlder()
+        {
+            ChartingRepo repo = new(new FakeStorageBackend());
+            var syncTime = repo.GetSettings().LastSyncDate;
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 98.6M, ModifiedOn = DateTime.UtcNow.AddHours(-2) });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), });
+
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend());
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 99.0M, ModifiedOn = DateTime.UtcNow.AddHours(-5) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), });
+
+            await repo.SyncAsync(secondaryRepo.ExportModel);
+
+            var conflictDay = await repo.GetDayAsync(DateTime.Today.AddDays(-1).ToKey());
+            Assert.AreEqual(98.6M, conflictDay.Temperature);
+            Assert.IsTrue(repo.GetSettings().LastSyncDate > syncTime, $"Sync Time {repo.GetSettings().LastSyncDate} should be greater than {syncTime}");
+        }
+
+        [TestMethod]
+        public async Task Sync_DaysOlderThanLastSync()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { LastSyncDate = DateTime.UtcNow.AddHours(-2) });
+            ChartingRepo repo = new(storageBackend);
+
+            var syncTime = repo.GetSettings().LastSyncDate;
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 98.6M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 98.6M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend());
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 99.0M, ModifiedOn = DateTime.UtcNow.AddHours(-5) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 99.0M, ModifiedOn = DateTime.UtcNow.AddHours(-5) });
+
+            await repo.SyncAsync(secondaryRepo.ExportModel);
+
+            var conflictDay = await repo.GetDayAsync(DateTime.Today.AddDays(-1).ToKey());
+            Assert.AreEqual(98.6M, conflictDay.Temperature);
+            Assert.IsTrue(repo.GetSettings().LastSyncDate > syncTime, $"Sync Time {repo.GetSettings().LastSyncDate} should be greater than {syncTime}");
+        }
+
+        [TestMethod]
+        public async Task Sync_WithMultipleCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend);
+
+            var syncTime = repo.GetSettings().LastSyncDate;
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 91M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 92M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), Temperature = 93M, ModifiedOn = DateTime.UtcNow.AddHours(-1) }, startNewCycle: true);
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-4), Temperature = 94M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+
+            var start_cycles = repo.ExportModel.Cycles.Select(q => q.StartDate.ToKey()).ToList();
+            Console.WriteLine(string.Join(",", start_cycles));
+            CollectionAssert.AreEqual(
+                new List<string>() { DateTime.Today.AddDays(-4).ToKey(), DateTime.Today.AddDays(-2).ToKey() },
+                repo.ExportModel.Cycles.Select(q => q.StartDate.ToKey()).ToList()
+            );
+            Assert.AreEqual(2, repo.CycleCount, $"Expected 2 Cycle before merge");
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend());
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(0), Temperature = 99M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), Temperature = 98M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), Temperature = 92M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), Temperature = 93M, ModifiedOn = DateTime.UtcNow.AddHours(-1) }, startNewCycle: true);
+            await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-4), Temperature = 94M, ModifiedOn = DateTime.UtcNow.AddHours(-1) });
+
+
+            await repo.SyncAsync(secondaryRepo.ExportModel);
+
+            start_cycles = repo.ExportModel.Cycles.Select(q => q.StartDate.ToKey()).ToList();
+            Console.WriteLine(string.Join(",", start_cycles));
+            CollectionAssert.AreEqual(
+                new List<string>() { DateTime.Today.AddDays(-4).ToKey(), DateTime.Today.AddDays(-2).ToKey() },
+                repo.ExportModel.Cycles.Select(q => q.StartDate.ToKey()).ToList()
+            );
+
+            var conflictDay = await repo.GetDayAsync(DateTime.Today.AddDays(-1).ToKey());
+            Assert.AreEqual(2, repo.CycleCount, $"Expected Cycle after Merge");
+            Assert.AreEqual(98M, conflictDay.Temperature);
+            Assert.IsTrue(repo.GetSettings().LastSyncDate > syncTime, $"Sync Time {repo.GetSettings().LastSyncDate} should be greater than {syncTime}");
         }
     }
 }
