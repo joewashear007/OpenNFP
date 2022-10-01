@@ -163,7 +163,12 @@
         }
         catch (Exception e)
         {
-            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+            var inErr = e;
+            do {
+                ErrorMsg += inErr.Message + Environment.NewLine;
+                inErr = e.InnerException;
+            } while (inErr != null);
+            ErrorMsg += e.StackTrace;
         }
     }
     public async Task SyncData()
