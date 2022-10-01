@@ -242,6 +242,12 @@ namespace OpenNFP.Shared
 
         public async Task SyncAsync(ImportExportView secondaryData)
         {
+            foreach(var c in secondaryData.Cycles)
+            {
+                _knownCycles.TryAdd(c.StartDate.ToKey(), c);
+                _settings.UpdateStartEndDates(c.StartDate);
+            }
+            
             var changedRecords = secondaryData.Records.Where(q => q.ModifiedOn > _settings.LastSyncDate);
             foreach (var record in changedRecords)
             {
@@ -261,9 +267,8 @@ namespace OpenNFP.Shared
                 }
             }
 
-            await _computeCycleDays();
             _settings.LastSyncDate = DateTime.UtcNow;
-            await _storage.WriteAsync(SETTING_KEY, _settings);
+            await _computeCycleDays();
         }
     }
 }

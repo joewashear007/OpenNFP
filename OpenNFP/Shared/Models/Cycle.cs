@@ -10,10 +10,53 @@ namespace OpenNFP.Shared.Models
 {
     public class Cycle
     {
+        private DateTime startDate = DateTime.Today;
+        private DateTime? endDate = null;
+        private string notes = string.Empty;
 
-        public DateTime StartDate { get; set; } = DateTime.Today;
-        public DateTime? EndDate { get; set; } = null;
-        public string Notes { get; set; } = string.Empty;
+        public DateTime StartDate
+        {
+            get => startDate;
+            set
+            {
+                if (value != startDate)
+                {
+                    startDate = value.Date;
+                    ModifiedOn = DateTime.UtcNow;
+                }
+            }
+        }
+        public DateTime? EndDate
+        {
+            get => endDate;
+            set
+            {
+                if (value != endDate)
+                {
+                    endDate = value;
+                    ModifiedOn = DateTime.UtcNow;
+                }
+            }
+        }
+        public string Notes
+        {
+            get => notes;
+            set
+            {
+                if (value != notes )
+                {
+                    notes = value;
+                    ModifiedOn = DateTime.UtcNow;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The time the record was modifed, should be in UTC time
+        /// </summary>
+        /// <remarks>This property should be read/write last by serilizer to properly set value</remarks>
+        [JsonPropertyOrder(1000)]
+        public DateTime ModifiedOn { get; set; } = DateTime.MinValue;
 
         /// <summary>
         /// Calculated Length, it is inclusive of each date so it might be 1 more than expected
