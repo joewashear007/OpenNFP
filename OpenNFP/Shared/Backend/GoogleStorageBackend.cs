@@ -91,7 +91,8 @@ namespace OpenNFP.Shared.Backend
             DriveService? service = await GetDriveService();
 
             var request = service.Files.Get(key.FileId);
-            var progress = await request.DownloadAsync(fileContents);
+            var progress = request.DownloadWithStatus(fileContents);
+            //var progress = await request.DownloadAsync(fileContents);
             if (progress.Status == DownloadStatus.Failed)
             {
                 throw new InvalidOperationException("Failed to download Google Drive File", progress.Exception);
