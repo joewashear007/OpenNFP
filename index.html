@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>OpenNFP</title>
+    <link href="/css/app.css" rel="stylesheet" />
+    <link href="/OpenNFP.Client.styles.css" rel="stylesheet" />
+    <link href="manifest.json" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="/_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <base />
+    <script>
+        //https://blog.elmah.io/how-to-fix-blazor-wasm-base-path-problems/
+        var path = window.location.pathname.split('/');
+        var base = document.getElementsByTagName('base')[0];
+        if (window.location.host.includes('localhost') || window.location.host.includes('jjprograms')) {
+            base.setAttribute('href', '/');
+        } else if (path.length > 2) {
+            base.setAttribute('href', '/' + path[1] + '/');
+        } else if (path[path.length - 1].length != 0) {
+            window.location.replace(window.location.origin + window.location.pathname + '/' + window.location.search);
+        }
+    </script>
+    <style>
+        .spin {
+            border: 16px solid #0042A4;
+            border-radius: 50%;
+            border-top: 16px solid #3775CF;
+            border-right: 16px solid #619BEE;
+            border-bottom: 16px solid #96BFF9;
+            border-left: 16px solid #C9E0FF;
+            width: 50px;
+            height: 50px;
+            -webkit-animation: spin 1.5s linear infinite;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div style="position:absolute; top:30vh; width:100%; text-align:center">
+            <h1>OpenNFP</h1>
+            <div style="display:flex; gap:10px; justify-content:center; align-items:center">
+                <div class="spin" role="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="/_framework/blazor.webassembly.js"></script>
+    <!--<script>navigator.serviceWorker.register('service-worker.js');</script>-->
+    <script src="/_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
+
+    <!-- Start Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+        // Single Page Apps for GitHub Pages
+        // https://github.com/rafrex/spa-github-pages
+        // Copyright (c) 2016 Rafael Pedicini, licensed under the MIT License
+        // ----------------------------------------------------------------------
+        // This script checks to see if a redirect is present in the query string
+        // and converts it back into the correct url and adds it to the
+        // browser's history using window.history.replaceState(...),
+        // which won't cause the browser to attempt to load the new url.
+        // When the single page app is loaded further down in this file,
+        // the correct url will be waiting in the browser's history for
+        // the single page app to route accordingly.
+        (function (l) {
+            if (l.search) {
+                var q = {};
+                l.search.slice(1).split('&').forEach(function (v) {
+                    var a = v.split('=');
+                    q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
+                });
+                if (q.p !== undefined) {
+                    window.history.replaceState(null, null,
+                        l.pathname.slice(0, -1) + (q.p || '') +
+                        (q.q ? ('?' + q.q) : '') +
+                        l.hash
+                    );
+                }
+            }
+        }(window.location))
+    </script>
+    <!-- End Single Page Apps for GitHub Pages -->
+
+    <script>
+        //https://docs.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-6.0
+        window.downloadFileFromStream = async function (fileName, contentStreamReference) {
+            debugger
+            const arrayBuffer = await contentStreamReference.arrayBuffer();
+            const blob = new Blob([arrayBuffer]);
+            const url = URL.createObjectURL(blob);
+
+            triggerFileDownload(fileName, url);
+
+            URL.revokeObjectURL(url);
+        }
+        window.triggerFileDownload = function (fileName, url) {
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = fileName ?? '';
+            anchorElement.click();
+            anchorElement.remove();
+        }
+
+        // Use it for .NET 6+
+        window.BlazorDownloadFile = function (filename, contentType, content) {
+            // Create the URL
+            const file = new File([content], filename, { type: contentType });
+            const exportUrl = URL.createObjectURL(file);
+
+            // Create the <a> element and click on it
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.href = exportUrl;
+            a.download = filename;
+            a.target = "_self";
+            a.click();
+
+            // We don't need to keep the object URL, let's release the memory
+            // On older versions of Safari, it seems you need to comment this line...
+            URL.revokeObjectURL(exportUrl);
+        }
+
+        function plotyMapper(data) {
+            let p = data.points[0];
+            let d = {
+                index: p.pointIndex,
+            }
+            console.log(d);
+            return d;
+        }
+
+        Blazor.registerCustomEventType('plotlyclick', {
+            browserEventName: 'plotly_click',
+            createEventArgs: event => {
+                return {
+                    index: event.points[0].pointIndex,
+                }
+            },
+        });
+        function subscribeClickEvent(dotNetObj, id) {
+            var plot = document.getElementById(id);
+            plot.on('plotly_click', function (data) {
+                let index = -1;
+                if (typeof (data.points[0].pointIndex) === "number") {
+                    index = data.points[0].pointIndex
+                } else {
+                    index = data.points[0].pointIndex[1]
+                }
+                if (data.points[0].y === "Day") {
+                    console.info(`plotly click event`, index)
+                    dotNetObj.invokeMethodAsync('ClickEvent', index);
+                } else {
+                    console.info(`ignoring non day event ${data.points[0].y}`)
+                }
+            })
+        }
+
+
+    </script>
+    <!-- Import the plotly.js library -->
+    <script src="/_content/Plotly.Blazor/plotly-latest.min.js" type="text/javascript"></script>
+
+    <!-- Import the plotly.js interop functions -->
+    <script src="/_content/Plotly.Blazor/plotly-interop.js" type="text/javascript"></script>
+</body>
+
+</html>
