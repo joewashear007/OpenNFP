@@ -1,11 +1,4 @@
-﻿using OpenNFP.Shared.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OpenNFP.Shared.Tests
+﻿namespace OpenNFP.Shared.Tests
 {
     [TestClass]
     public class CycleChartGeneratorTests
@@ -14,10 +7,10 @@ namespace OpenNFP.Shared.Tests
         public async Task GetTracesAsync_LoadData_Success()
         {
             FakeStorageBackend storageBackend = new();
-            ChartingRepo repo = new(storageBackend);
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
             await DemoData.LoadDemoData(repo, DateTime.Today);
 
-            CycleChartGenerator generator = new CycleChartGenerator(repo);
+            CycleChartGenerator generator = new(repo);
 
             var vm = await generator.GetTracesAsync(DateTime.Today.AddDays(-10), false);
 

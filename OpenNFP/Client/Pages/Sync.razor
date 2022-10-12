@@ -28,7 +28,7 @@
         <Authorized>
             <MudCard>
                 <MudCardHeader>
-                    Hello, @context.User.Identity.Name! Your Last Sync was on @(repo.GetSettings().LastSyncDate.ToString("g"))
+                    Hello, @context.User.Identity.Name! Your Last Sync was on @(repo.Settings.LastSyncDate.ToString("g"))
                 </MudCardHeader>
                 <MudCardContent>
                     <pre>
@@ -97,6 +97,10 @@
                         }
                     </MudButton>
 
+                    <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary" Disabled="@_processing">
+                            <MudText>Cancel</MudText>
+                    </MudButton>
+
                 </MudCardActions>
             </MudCard>
         </Authorized>
@@ -118,6 +122,7 @@
     SyncInfo File { get; set; } = SyncInfo.Empty;
     string FileContent { get; set; } = string.Empty;
     string ErrorMsg { get; set; } = string.Empty;
+    CancellationTokenSource cancellationTokenSource { get; set; } = new(); 
 
     protected override async void OnAfterRender(bool firstRender)
     {
@@ -128,13 +133,17 @@
         }
     }
 
+    private void Cancel(){
+        cancellationTokenSource.Cancel();
+    }
+
     private async Task refreshFileInfo()
     {
         try
         {
             ErrorMsg = "";
             _loading = true;
-            File = await remoteStorageBackend.GetLastSyncInfo();
+            File = await remoteStorageBackend.GetLastSyncInfo(cancellationTokenSource.Token);
         }
 
         catch (Exception e)
@@ -151,9 +160,10 @@
     {
         try
         {
+            cancellationTokenSource = new CancellationTokenSource();
             ErrorMsg = "";
             _processing = true;
-            await remoteStorageBackend.WriteAsync(File, repo.ExportModel);
+            await remoteStorageBackend.WriteAsync(File, repo.ExportModel, cancellationTokenSource.Token);
             await refreshFileInfo();
 
             _processing = false;
@@ -174,9 +184,10 @@
     {
         try
         {
+            cancellationTokenSource = new CancellationTokenSource();
             ErrorMsg = "";
             _processing = true;
-            var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
+            var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File, cancellationTokenSource.Token);
             FileContent = data?.ToString();
         }
         catch (Exception e)
@@ -198,13 +209,10 @@
     {
         try
         {
+            cancellationTokenSource = new CancellationTokenSource();
             ErrorMsg = "";
             _processing = true;
-            var data = await remoteStorageBackend.ReadAsync<ImportExportView>(File);
-            if (data != null)
-            {
-                await repo.SyncAsync(data);
-            }
+            await repo.SyncAsync(remoteStorageBackend, cancellationTokenSource.Token);
             _processing = false;
         }
         catch (Exception e)

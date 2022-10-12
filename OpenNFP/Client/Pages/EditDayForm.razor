@@ -232,7 +232,7 @@
                 await ChartingRepo.AddUpdateRecord(Day, startCycle);
                 uriHelper.NavigateTo(uriHelper.BaseUri);
                 await localStorage.SetItemAsync(Day.IndexKey, Day);
-                await localStorage.SetItemAsync("chart.settings", ChartingRepo.GetSettings());
+                await localStorage.SetItemAsync("chart.settings", ChartingRepo.Settings);
             }
         }
         else

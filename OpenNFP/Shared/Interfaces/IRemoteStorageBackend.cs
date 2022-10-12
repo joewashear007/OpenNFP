@@ -9,9 +9,9 @@ namespace OpenNFP.Shared.Interfaces
 {
     public interface IRemoteStorageBackend 
     {
-        Task<SyncInfo> GetLastSyncInfo();
-        Task WriteAsync<T>(SyncInfo key, T obj);
-        Task<T?> ReadAsync<T>(SyncInfo key);
-        Task<MemoryStream> ReadStreamAsync(SyncInfo key);
+        Task<SyncInfo> GetLastSyncInfo(CancellationToken token);
+        Task WriteAsync<T>(SyncInfo key, T obj, CancellationToken token);
+        Task<T?> ReadAsync<T>(SyncInfo key, CancellationToken token);
+        Task<MemoryStream> ReadStreamAsync(SyncInfo key, CancellationToken token);
     }
 }

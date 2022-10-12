@@ -21,7 +21,7 @@ namespace OpenNFP.Shared.Interfaces
 
         IAsyncEnumerable<CycleIndex<DayRecord>> GetDayRecordsForCycleAsync(DateTime cycleStart, bool limit);
 
-        ChartSettings GetSettings();
+        ChartSettings Settings { get; }
 
         Task ImportAsync(ImportExportView rawData);
 
@@ -29,7 +29,7 @@ namespace OpenNFP.Shared.Interfaces
 
         bool IsCycleStart(string date);
 
-        Task SyncAsync(ImportExportView secondaryData);
-
+        Task MergeAsync(ImportExportView secondaryData);
+        Task SyncAsync(IRemoteStorageBackend remoteStorage, CancellationToken cancellationToken);
     }
 }

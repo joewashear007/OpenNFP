@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using OpenNFP.Client.Utils
 
 @inject NavigationManager MyNavigationManager
 @inject IChartingRepo ChartingRepo
@@ -28,6 +29,8 @@
 </MudContainer>
 
 @code {
+    [CascadingParameter(Name = "AppState")]
+    protected AppState? AppState { get; set; }
 
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
     private bool AllCyclesLoaded { get; set; } = false;

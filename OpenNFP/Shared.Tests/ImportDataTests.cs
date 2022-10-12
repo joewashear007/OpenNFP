@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using OpenNFP.Shared.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +16,7 @@ namespace OpenNFP.Shared.Tests
         public async Task ImportDaysTest()
         {
             FakeStorageBackend storageBackend = new();
-            ChartingRepo repo = new(storageBackend);
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
 
             await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Open });
             await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Closed });
@@ -29,7 +31,7 @@ namespace OpenNFP.Shared.Tests
 
             var model = repo.ExportModel;
 
-            ChartingRepo newRepo = new(storageBackend);
+            ChartingRepo newRepo = new(storageBackend, new NullLogger<IChartingRepo>());
             await newRepo.ImportAsync(model);
 
             Assert.AreEqual(await repo.GetDayRecordsForCycleAsync(DateTime.Today.AddDays(-10), false).CountAsync(), await newRepo.GetDayRecordsForCycleAsync(DateTime.Today.AddDays(-10), false).CountAsync());
@@ -39,7 +41,7 @@ namespace OpenNFP.Shared.Tests
         public async Task ExportTask()
         {
             FakeStorageBackend storageBackend = new();
-            ChartingRepo repo = new(storageBackend);
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
             await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Open });
             await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-2), ClearBlueResult = ClearBlueResult.Peak, CervixOpening = CervixOpening.Closed });
             await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-3), ClearBlueResult = ClearBlueResult.High, CervixOpening = CervixOpening.Closed });
@@ -66,7 +68,7 @@ namespace OpenNFP.Shared.Tests
         public async Task ImportFileData()
         {
             FakeStorageBackend storageBackend = new();
-            ChartingRepo repo = new(storageBackend);
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
             string data = await File.ReadAllTextAsync(@".\data\converted_data.json");
             var importData = JsonSerializer.Deserialize<ImportExportView>(data);
 

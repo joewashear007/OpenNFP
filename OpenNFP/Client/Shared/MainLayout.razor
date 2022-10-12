@@ -1,37 +1,62 @@
-﻿@inherits LayoutComponentBase
+﻿@using OpenNFP.Client.Utils
+@inherits LayoutComponentBase
 @inject NavigationManager uriHelper;
+@inject IRemoteStorageBackend RemoteStorageBackend;
 @inject IChartingRepo ChartingRepo
+@inject ISnackbar Snackbar
+@inject ILogger<MainLayout> Logger;
 
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar>
-        @if (uriHelper.Uri.Contains("editday"))
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
-        }
-        else
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        }
-        OpenNFP
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
-    </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        <MudContainer Fixed="true">
-            @Body
-        </MudContainer>
-    </MudMainContent>
+    <CascadingValue Name="AppState" Value="@AppState">
+
+        <MudAppBar>
+            @if (!isMainPage)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            }
+            OpenNFP
+            <MudSpacer />
+            <AuthorizeView>
+                <Authorized>
+                    @if (isMainPage)
+                    {
+                        <MudIconButton Icon="@syncIcon" Color="Color.Inherit"  OnClick="@Sync" Class="@syncIconClasses" Disabled=@syncIconDisabled/>
+                    }
+                </Authorized>
+                <NotAuthorized>
+                    <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
+                </NotAuthorized>
+            </AuthorizeView>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />
+            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
+        </MudAppBar>
+        <MudDrawer @bind-Open="@_drawerOpen">
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent>
+            <MudContainer Fixed="true">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </CascadingValue>
 </MudLayout>
 
 @code {
+    private string syncIconClasses = string.Empty;
+    private string syncIcon = Icons.Material.Outlined.CloudSync;
+    private bool syncIconDisabled = false;
     bool _drawerOpen = false;
+    public AppState AppState { get; set; } = new AppState();
+
+    public bool isMainPage { get => new Uri( uriHelper.Uri).Segments.Count() == 1; }
 
     void DrawerToggle()
     {
@@ -46,5 +71,58 @@
     private void AddDay()
     {
         uriHelper.NavigateTo(uriHelper.BaseUri + "/editday");
+    }
+
+    private void Login()
+    {
+        uriHelper.NavigateTo(uriHelper.BaseUri + "/sync");
+    }
+
+    private void Refresh()
+    {
+        //TODO: refresh main app page
+        AppState.ShouldRefresh = true;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Sync();
+        StateHasChanged();
+    }
+
+    private async Task Sync() {
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        syncIconClasses = "icon-spin";
+        syncIcon = Icons.Material.Outlined.Sync;
+        syncIconDisabled = true;
+        StateHasChanged();
+        var _snackbar = Snackbar.Add("Syncing Data", Severity.Normal, config =>
+        {
+            config.Icon = Icons.Material.Outlined.Sync;
+            config.VisibleStateDuration = int.MaxValue;
+            config.Action = "Cancel";
+            config.ActionVariant = Variant.Text;
+            config.ActionColor = Color.Error;
+            config.Onclick = snackbar => { 
+                cancellationTokenSource.Cancel();
+                Snackbar.Add("Sync Cancelled", Severity.Warning);
+                return Task.CompletedTask;
+            };
+        });
+
+
+        await ChartingRepo.SyncAsync(RemoteStorageBackend, cancellationTokenSource.Token);
+        Snackbar.Remove(_snackbar);
+
+        if (!cancellationTokenSource.IsCancellationRequested)
+        {
+            Snackbar.Add("Sync Complete", Severity.Success);
+        }
+
+        syncIconDisabled = false;
+        syncIconClasses = string.Empty;
+        syncIcon = Icons.Material.Outlined.CloudSync;
+        StateHasChanged();
     }
 }

@@ -1,9 +1,12 @@
-﻿@using OpenNFP.Shared.Internal
+﻿@using OpenNFP.Client.Utils
+@using OpenNFP.Shared.Internal
 @inject IJSRuntime JS
 @inject IChartingRepo Repo
 @inject IDialogService DialogService
 @inject ILocalStorageService localStorage
 @inject NavigationManager MyNavigationManager
+@inject ILogger<NavMenu> Logger;
+
 
 <MudStack Justify="@Justify.SpaceBetween" Style="height:100%">
 
@@ -16,6 +19,8 @@
             <MudNavLink OnClick="@Clear">Clear Data</MudNavLink>
         </MudNavGroup>
         <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">About</MudNavLink>
+        <MudDivider />
+        <MudNavLink OnClick="ResetSync" Disabled="@(AppState?.ShowStartUpSync ?? false)">Reset OnSync Startup</MudNavLink>
     </MudNavMenu>
 
     <MudPaper>
@@ -48,10 +53,20 @@
 
 
 @code {
+    [CascadingParameter(Name = "AppState")]
+    protected AppState? AppState { get; set; }
 
     private MudMessageBox mbox { get; set; }
     private ImportExportView? importData { get; set; } = null;
     private string importErrorText { get; set; } = "";
+
+    private void ResetSync(){
+        if (AppState is not null){
+            AppState.ShowStartUpSync = true;
+            Logger.LogDebug("Reseting AppState ShowStartUpSync = {Value}", AppState.ShowStartUpSync);
+            StateHasChanged();
+        }
+    }
 
     private async Task Export()
     {

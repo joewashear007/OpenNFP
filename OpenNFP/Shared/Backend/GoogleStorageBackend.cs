@@ -50,14 +50,14 @@ namespace OpenNFP.Shared.Backend
 
 
 
-        public async Task<SyncInfo> GetLastSyncInfo()
+        public async Task<SyncInfo> GetLastSyncInfo(CancellationToken token)
         {
-            DriveService service = await GetDriveService();
+            DriveService service = await GetDriveService(token);
 
             var listRequest = service.Files.List();
             listRequest.Q = $"name='{FileName}'";
             listRequest.Fields = "files(id,name,createdTime,modifiedTime,size)";
-            var rawfiles = await listRequest.ExecuteAsync();
+            var rawfiles = await listRequest.ExecuteAsync(token);
             var file = rawfiles.Files.FirstOrDefault();
             if (file != null)
             {
@@ -77,21 +77,21 @@ namespace OpenNFP.Shared.Backend
 
         }
 
-        public async Task<T?> ReadAsync<T>(SyncInfo key)
+        public async Task<T?> ReadAsync<T>(SyncInfo key, CancellationToken token)
         {
-            MemoryStream fileContents = await ReadStreamAsync(key);
+            MemoryStream fileContents = await ReadStreamAsync(key, token);
             T? data = JsonSerializer.Deserialize<T>(fileContents.ToArray());
             return data;
 
         }
 
-        public async Task<MemoryStream> ReadStreamAsync(SyncInfo key)
+        public async Task<MemoryStream> ReadStreamAsync(SyncInfo key, CancellationToken token)
         {
             using MemoryStream fileContents = new();
-            DriveService? service = await GetDriveService();
+            DriveService? service = await GetDriveService(token);
 
             var request = service.Files.Get(key.FileId);
-            var progress = await request.DownloadAsync(fileContents);
+            var progress = await request.DownloadAsync(fileContents, token);
             if (progress.Status == DownloadStatus.Failed)
             {
                 throw new InvalidOperationException("Failed to download Google Drive File", progress.Exception);
@@ -102,10 +102,10 @@ namespace OpenNFP.Shared.Backend
             }
         }
 
-        public async Task WriteAsync<T>(SyncInfo key, T obj)
+        public async Task WriteAsync<T>(SyncInfo key, T obj, CancellationToken token)
         {
             using var stream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(obj));
-            DriveService? service = await GetDriveService();
+            DriveService? service = await GetDriveService(token);
 
             var fileMetadata = new Google.Apis.Drive.v3.Data.File() { Name = key.FileName };
 
@@ -122,20 +122,21 @@ namespace OpenNFP.Shared.Backend
                 request = createrequest;
             }
 
-            IUploadProgress uploadRsq = await request.UploadAsync();
+            IUploadProgress uploadRsq = await request.UploadAsync(token);
 
         }
 
-        private async Task<DriveService> GetDriveService()
+        private async Task<DriveService> GetDriveService(CancellationToken token)
         {
             if (driveService == null)
             {
                 var tokenResult = await TokenProvider.RequestAccessToken(options);
-                if (tokenResult.TryGetToken(out var token))
+                if (tokenResult.TryGetToken(out var authToken))
                 {
+                    token.ThrowIfCancellationRequested();
                     driveService = new DriveService(new BaseClientService.Initializer
                     {
-                        HttpClientInitializer = new AuthTokenHttpInitializer(token.Value),
+                        HttpClientInitializer = new AuthTokenHttpInitializer(authToken.Value),
                         ApplicationName = "OpenNFP",
                         GZipEnabled = false
                     });

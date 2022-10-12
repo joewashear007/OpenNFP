@@ -1,7 +1,9 @@
-﻿using OpenNFP.Shared.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using OpenNFP.Shared.Interfaces;
 using OpenNFP.Shared.Internal;
 using OpenNFP.Shared.Models;
 using System.Text.Json;
+using System.Threading;
 
 namespace OpenNFP.Shared
 {
@@ -32,10 +34,14 @@ namespace OpenNFP.Shared
         };
 
         public int CycleCount => _knownCycles.Count;
+        public ChartSettings Settings => _settings;
 
-        public ChartingRepo(IStorageBackend storage)
+        private ILogger<IChartingRepo> Logger { get; }
+
+        public ChartingRepo(IStorageBackend storage, ILogger<IChartingRepo> logger)
         {
             _storage = storage;
+            Logger = logger;
             _dayRepo = new DayRepo(storage);
             _settings = new ChartSettings();
             _cycleDayMap = new SortedDictionary<string, int>();
@@ -75,6 +81,7 @@ namespace OpenNFP.Shared
         {
             await _addUpdateRecordInternalAsync(rec, startNewCycle);
             await _computeCycleDays();
+            await _saveSettings();
         }
 
 
@@ -120,7 +127,7 @@ namespace OpenNFP.Shared
             if (_knownCycles.ContainsKey(date))
             {
                 _knownCycles.Remove(date);
-                await _storage.WriteAsync(SETTING_KEY, GetSettings());
+                await _saveSettings();
                 return true;
             }
             return false;
@@ -153,6 +160,7 @@ namespace OpenNFP.Shared
                     await _addUpdateRecordInternalAsync(rec, false);
                 }
                 await _computeCycleDays();
+                await _saveSettings();
             }
         }
 
@@ -167,7 +175,7 @@ namespace OpenNFP.Shared
             }
         }
 
-        private async Task _computeCycleDays()
+        private async Task _computeCycleDays(bool skipLastEditDate = false)
         {
             _addAutoCycle(_settings.StartDate);
 
@@ -196,7 +204,6 @@ namespace OpenNFP.Shared
                 curDate = curDate.AddDays(1);
             } while (curDate <= _settings.EndDate);
             _knownCycles[_knownCycles.Keys.Last()].EndDate = _settings.EndDate;
-            await _storage.WriteAsync(SETTING_KEY, GetSettings());
         }
 
 
@@ -212,25 +219,13 @@ namespace OpenNFP.Shared
             }
             else
             {
-                await _storage.WriteAsync(SETTING_KEY, _settings);
+                await _saveSettings();
             }
 
 
         }
 
-        public ChartSettings GetSettings()
-        {
-            return new ChartSettings()
-            {
-                StartDate = _settings.StartDate,
-                EndDate = _settings.EndDate,
-                Cycles = _knownCycles.Values.ToList(),
-                LastSyncDate = _settings.LastSyncDate,
-                CycleDisplayLimit = _settings.CycleDisplayLimit,
-                MergeAutoCycleLimit = _settings.MergeAutoCycleLimit,
-                Version = _settings.Version
-            };
-        }
+        
 
         public void Clear()
         {
@@ -240,7 +235,7 @@ namespace OpenNFP.Shared
             _dayRepo.Clear();
         }
 
-        public async Task SyncAsync(ImportExportView secondaryData)
+        public async Task MergeAsync(ImportExportView secondaryData)
         {
             foreach(var c in secondaryData.Cycles)
             {
@@ -269,6 +264,51 @@ namespace OpenNFP.Shared
 
             _settings.LastSyncDate = DateTime.UtcNow;
             await _computeCycleDays();
+            await _saveSettings();
+        }
+
+        public async Task SyncAsync(IRemoteStorageBackend remoteStorage, CancellationToken cancellationToken)
+        {
+            Logger.LogInformation("Sync Initiated");
+            var info = await remoteStorage.GetLastSyncInfo(cancellationToken);
+            if (info.SyncTimeStamp > _settings.LastSyncDate)
+            {
+                Logger.LogInformation("Sync Initiated");
+                var data = await remoteStorage.ReadAsync<ImportExportView>(info, cancellationToken);
+                if (data is not null)
+                {
+                    await MergeAsync(data);
+                    await remoteStorage.WriteAsync(info, ExportModel, cancellationToken);
+                }
+            }
+            else
+            {
+                Logger.LogInformation("Sync Skipped Due to TimeStamps, {LastSync} >= {RemoteUpdate}", _settings.LastSyncDate, info.SyncTimeStamp);
+                if (info.SyncTimeStamp < _settings.LastEditDate)
+                {
+                    Logger.LogInformation("Sync Initiated - Local Edits");
+                    var data = await remoteStorage.ReadAsync<ImportExportView>(info, cancellationToken);
+                    if (data is not null)
+                    {
+                        await MergeAsync(data);
+                        await remoteStorage.WriteAsync(info, ExportModel, cancellationToken);
+                    }
+                }
+                else
+                {
+                    Logger.LogInformation("Sync Skipped Due to TimeStamps, {LastEdit} >= {RemoteUpdate}", _settings.LastEditDate, info.SyncTimeStamp);
+                }
+            }
+            Logger.LogInformation("Sync Complete");
+        }
+
+        private async Task _saveSettings(bool skipLastEditDate = false)
+        {
+            if (!skipLastEditDate)
+            {
+                _settings.LastEditDate = DateTime.UtcNow;
+            }
+            await _storage.WriteAsync(SETTING_KEY, _settings);
         }
     }
 }

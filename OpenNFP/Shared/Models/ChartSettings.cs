@@ -22,6 +22,7 @@ namespace OpenNFP.Shared.Models
         public int MergeAutoCycleLimit { get; set; } = 10;
 
         public DateTime LastSyncDate { get; set; } = DateTime.MinValue;
+        public DateTime LastEditDate { get; set; } = DateTime.MinValue;
 
         internal void UpdateStartEndDates(DateTime date)
         {
