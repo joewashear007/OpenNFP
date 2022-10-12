@@ -35,7 +35,7 @@
                     <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
                 </NotAuthorized>
             </AuthorizeView>
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />
+            @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
             <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
         </MudAppBar>
         <MudDrawer @bind-Open="@_drawerOpen">
@@ -50,6 +50,9 @@
 </MudLayout>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
     private string syncIconClasses = string.Empty;
     private string syncIcon = Icons.Material.Outlined.CloudSync;
     private bool syncIconDisabled = false;
@@ -87,42 +90,65 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await Sync();
-        StateHasChanged();
+        var authenticationState = await authenticationStateTask;
+        if (authenticationState?.User?.Identity?.IsAuthenticated ?? false)
+        {
+            await Sync();
+            StateHasChanged();
+        } else {
+            Logger.LogWarning("User is not authenticated");
+        }
     }
 
     private async Task Sync() {
-        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        syncIconClasses = "icon-spin";
-        syncIcon = Icons.Material.Outlined.Sync;
-        syncIconDisabled = true;
-        StateHasChanged();
-        var _snackbar = Snackbar.Add("Syncing Data", Severity.Normal, config =>
+        try
         {
-            config.Icon = Icons.Material.Outlined.Sync;
-            config.VisibleStateDuration = int.MaxValue;
-            config.Action = "Cancel";
-            config.ActionVariant = Variant.Text;
-            config.ActionColor = Color.Error;
-            config.Onclick = snackbar => { 
-                cancellationTokenSource.Cancel();
-                Snackbar.Add("Sync Cancelled", Severity.Warning);
-                return Task.CompletedTask;
-            };
-        });
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            syncIconClasses = "icon-spin";
+            syncIcon = Icons.Material.Outlined.Sync;
+            syncIconDisabled = true;
+            StateHasChanged();
+            var _snackbar = Snackbar.Add("Syncing Data", Severity.Normal, config =>
+            {
+                config.Icon = Icons.Material.Outlined.Sync;
+                config.VisibleStateDuration = int.MaxValue;
+                config.Action = "Cancel";
+                config.ActionVariant = Variant.Text;
+                config.ActionColor = Color.Error;
+                config.Onclick = snackbar =>
+                {
+                    cancellationTokenSource.Cancel();
+                    Snackbar.Add("Sync Cancelled", Severity.Warning);
+                    return Task.CompletedTask;
+                };
+            });
 
 
-        await ChartingRepo.SyncAsync(RemoteStorageBackend, cancellationTokenSource.Token);
-        Snackbar.Remove(_snackbar);
+            await ChartingRepo.SyncAsync(RemoteStorageBackend, cancellationTokenSource.Token);
+            Snackbar.Remove(_snackbar);
 
-        if (!cancellationTokenSource.IsCancellationRequested)
-        {
-            Snackbar.Add("Sync Complete", Severity.Success);
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
+                Snackbar.Add("Sync Complete", Severity.Success);
+            }
+
+        } catch (Exception e) {
+            var errorMsg = "";
+            var inErr = e;
+            do
+            {
+                errorMsg += inErr.Message + Environment.NewLine;
+                inErr = inErr.InnerException;
+            } while (inErr != null);
+            errorMsg += e.StackTrace;
+
+            Snackbar.Add(errorMsg, Severity.Error);
+        } finally {
+            syncIconDisabled = false;
+            syncIconClasses = string.Empty;
+            syncIcon = Icons.Material.Outlined.CloudSync;
+            StateHasChanged();
+
         }
-
-        syncIconDisabled = false;
-        syncIconClasses = string.Empty;
-        syncIcon = Icons.Material.Outlined.CloudSync;
-        StateHasChanged();
     }
 }
