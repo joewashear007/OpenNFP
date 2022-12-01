@@ -26,6 +26,8 @@ namespace OpenNFP.Shared.Models
                 }
             }
         }
+
+        [JsonIgnore]
         public DateTime? EndDate
         {
             get => endDate;

@@ -40,6 +40,21 @@ namespace OpenNFP.Shared.Tests
         }
 
         [TestMethod]
+        public async Task AddDay_newCycle_SettingsUpdated()
+        {
+            FakeStorageBackend storageBackend = new();
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1), ClearBlueResult = ClearBlueResult.Peak, });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-10), ClearBlueResult = ClearBlueResult.Low, });
+            await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today, ClearBlueResult = ClearBlueResult.Low, }, startNewCycle: true);
+
+            Assert.AreEqual(2, repo.Cycles.Count());
+            // 10 day + today since we don't add today
+            Assert.AreEqual(2, ((IEnumerable<Cycle>)storageBackend.Data[ChartingRepo.CYCLE_KEY]).Count());
+        }
+
+        [TestMethod]
         public async Task Sync_AllDiffernceDays()
         {
             ChartingRepo repo = new(new FakeStorageBackend(), new NullLogger<IChartingRepo>());

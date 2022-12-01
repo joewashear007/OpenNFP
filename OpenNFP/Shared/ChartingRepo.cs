@@ -10,6 +10,7 @@ namespace OpenNFP.Shared
     public class ChartingRepo : IChartingRepo
     {
         public const string SETTING_KEY = "chart.settings";
+        public const string CYCLE_KEY = "chart.cycles";
 
         private readonly IStorageBackend _storage;
         private ChartSettings _settings;
@@ -209,20 +210,25 @@ namespace OpenNFP.Shared
 
         public async Task InitializeAsync()
         {
+            var loadedCycles = await _storage.ReadAsync<List<Cycle>>(CYCLE_KEY);
+            loadedCycles?.ForEach(q => _knownCycles.TryAdd(q.StartDate.ToKey(), q));
 
             var loadedSettings = await _storage.ReadAsync<ChartSettings>(SETTING_KEY);
             if (loadedSettings != null)
             {
                 _settings = loadedSettings;
-                loadedSettings.Cycles.ForEach(q => _knownCycles.Add(q.StartDate.ToKey(), q));
-                await _computeCycleDays();
+                if (loadedSettings.EndDate < DateTime.Today)
+                {
+                    //TODO: should this be a app settings?
+                    _settings.EndDate = DateTime.Today;
+                }
+                loadedSettings.Cycles.ForEach(q => _knownCycles.TryAdd(q.StartDate.ToKey(), q));
             }
             else
             {
                 await _saveSettings();
             }
-
-
+            await _computeCycleDays();
         }
 
         
@@ -308,7 +314,12 @@ namespace OpenNFP.Shared
             {
                 _settings.LastEditDate = DateTime.UtcNow;
             }
+            if(_knownCycles.Count > 0)
+            {
+                _settings.Cycles.Clear();
+            }
             await _storage.WriteAsync(SETTING_KEY, _settings);
+            await _storage.WriteAsync(CYCLE_KEY, _knownCycles.Values);
         }
     }
 }

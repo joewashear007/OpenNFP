@@ -15,6 +15,7 @@ namespace OpenNFP.Shared.Models
 
         public DateTime EndDate { get; set; } = DateTime.Today;
 
+        [Obsolete("this was a terrible idea")]
         public List<Cycle> Cycles { get; set; } = new List<Cycle>();
 
         public int CycleDisplayLimit { get; set; } = 40;
