@@ -37,7 +37,7 @@ namespace OpenNFP.Shared.Backend
 
         private readonly AccessTokenRequestOptions options = new()
         {
-            Scopes = new List<string>() { "openid", "profile", "email", "https://www.googleapis.com/auth/drive" }
+            Scopes = new List<string>() { "openid", "profile", "email", "https://www.googleapis.com/auth/drive.file" }
         };
         private bool disposedValue;
 
