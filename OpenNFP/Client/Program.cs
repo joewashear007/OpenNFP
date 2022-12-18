@@ -8,6 +8,7 @@ using Blazored.LocalStorage;
 using OpenNFP.Shared.Interfaces;
 using OpenNFP.Shared.Backend;
 using MudBlazor;
+using OpenNFP.Client.Utils;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -29,6 +30,7 @@ builder.Services.AddBlazoredLocalStorageAsSingleton();
 builder.Services.AddSingleton<IStorageBackend, LocalStorageBackend>();
 builder.Services.AddSingleton<IChartingRepo, ChartingRepo>();
 builder.Services.AddSingleton<ICycleChartGenerator, CycleChartGenerator>();
+builder.Services.AddSingleton<IAppState, AppState>();
 
 builder.Services.AddTransient<IRemoteStorageBackend, GoogleStorageBackend>();
 

@@ -1,65 +1,65 @@
 ﻿@using OpenNFP.Client.Utils
+@using System.Diagnostics.CodeAnalysis;
 @inherits LayoutComponentBase
 @inject NavigationManager uriHelper;
 @inject IRemoteStorageBackend RemoteStorageBackend;
 @inject IChartingRepo ChartingRepo
 @inject ISnackbar Snackbar
 @inject ILogger<MainLayout> Logger;
+@inject IAppState AppState;
 
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <CascadingValue Name="AppState" Value="@AppState">
 
-        <MudAppBar>
-            @if (!isMainPage)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
-            }
-            else
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-            }
-            OpenNFP
-            <MudSpacer />
-            <AuthorizeView>
-                <Authorized>
-                    @if (isMainPage)
-                    {
-                        <MudIconButton Icon="@syncIcon" Color="Color.Inherit"  OnClick="@Sync" Class="@syncIconClasses" Disabled=@syncIconDisabled/>
-                    }
-                </Authorized>
-                <NotAuthorized>
-                    <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
-                </NotAuthorized>
-            </AuthorizeView>
-            @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
-            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
-        </MudAppBar>
-        <MudDrawer @bind-Open="@_drawerOpen">
-            <NavMenu />
-        </MudDrawer>
-        <MudMainContent>
-            <MudContainer Fixed="true">
-                @Body
-            </MudContainer>
-        </MudMainContent>
-    </CascadingValue>
+    <MudAppBar>
+        @if (!isMainPage)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        }
+        OpenNFP
+        <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                @if (isMainPage)
+                {
+                    <MudIconButton Icon="@syncIcon" Color="Color.Inherit" OnClick="@Sync" Class="@syncIconClasses" Disabled=@syncIconDisabled />
+                }
+            </Authorized>
+            <NotAuthorized>
+                <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
+            </NotAuthorized>
+        </AuthorizeView>
+        @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer Fixed="true">
+            @Body
+        </MudContainer>
+    </MudMainContent>
 </MudLayout>
 
 @code {
     [CascadingParameter]
-    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
 
     private string syncIconClasses = string.Empty;
     private string syncIcon = Icons.Material.Outlined.CloudSync;
     private bool syncIconDisabled = false;
     bool _drawerOpen = false;
-    public AppState AppState { get; set; } = new AppState();
 
-    public bool isMainPage { get => new Uri( uriHelper.Uri).Segments.Count() == 1; }
+    public bool ShouldRunSync { get; set; } = true;
+    public bool isMainPage { get => new Uri(uriHelper.Uri).Segments.Count() == 1; }
 
     void DrawerToggle()
     {
@@ -84,23 +84,13 @@
     private void Refresh()
     {
         //TODO: refresh main app page
-        AppState.ShouldRefresh = true;
+        AppState.ShouldRunSyncOnStartup = true;
         StateHasChanged();
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        var authenticationState = await authenticationStateTask;
-        if (authenticationState?.User?.Identity?.IsAuthenticated ?? false)
-        {
-            await Sync();
-            StateHasChanged();
-        } else {
-            Logger.LogWarning("User is not authenticated");
-        }
-    }
 
-    private async Task Sync() {
+    private async Task Sync()
+    {
         try
         {
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -132,7 +122,9 @@
                 Snackbar.Add("Sync Complete", Severity.Success);
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             var errorMsg = "";
             var inErr = e;
             do
@@ -143,12 +135,35 @@
             errorMsg += e.StackTrace;
 
             Snackbar.Add(errorMsg, Severity.Error);
-        } finally {
+        }
+        finally
+        {
             syncIconDisabled = false;
             syncIconClasses = string.Empty;
             syncIcon = Icons.Material.Outlined.CloudSync;
             StateHasChanged();
 
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (authenticationStateTask != null && isMainPage && ShouldRunSync)
+            {
+                var authenticationState = await authenticationStateTask;
+                if (authenticationState?.User?.Identity?.IsAuthenticated ?? false)
+                {
+                    await Sync();
+                    AppState.ShouldRunSyncOnStartup = false;
+                    StateHasChanged();
+                }
+                else
+                {
+                    Logger.LogWarning("User is not authenticated");
+                }
+            }
         }
     }
 }
