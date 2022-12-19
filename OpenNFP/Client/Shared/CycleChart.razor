@@ -18,23 +18,35 @@
     <MudCardHeader>
         <MudChip Label="true">Cycle @CycleIndex</MudChip>
         <MudText Align="Align.Center" Typo="Typo.subtitle1"></MudText>
-        <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----") [Cycle Length: @(Cycle.Length) @(LimitDays && Cycle.Length > 40 ? "Limited to 40 Days": "") ]</MudText>
+        <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----") [Cycle Length: @(Cycle.Length) @(LimitDays && Cycle.Length > 40 ? "Limited to 40 Days" : "") ]</MudText>
     </MudCardHeader>
     <MudCardContent Class="p-0">
+        @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
+        {
+            <MudAlert Severity="Severity.Warning">
+                This chart is too short! <br />
+                <MudButtonGroup Color="Color.Warning" Variant="Variant.Text">
+                    <MudButton OnClick="() => MergeCycle(below:false)">Merge With Above Cycle</MudButton>
+                    <MudButton OnClick="() => MergeCycle(below:true)">Merge with Below Cycle</MudButton>
+                </MudButtonGroup>
+            </MudAlert>
+        }
         @if (Loading)
         {
             <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="60px" />
             <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="200px" />
             <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
             <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
-        } else {
-        <div style="overflow-x:scroll; overflow-y:hidden; padding-bottom:20px">
+        }
+        else
+        {
+            <div style="overflow-x:scroll; overflow-y:hidden; padding-bottom:20px">
 
-            <PlotlyChart @bind-Config="config"
+                <PlotlyChart @bind-Config="config"
                          @bind-Layout="layout"
                          @bind-Data="data"
                          @ref="chart" />
-        </div>
+            </div>
         }
     </MudCardContent>
 </MudCard>
@@ -110,7 +122,7 @@
                 TickFormat = "%a %m/%d",
                 TickAngle = 90,
                 DTick = 86400000,
-                Type = Plotly.Blazor.LayoutLib.XAxisLib.TypeEnum.Date,                
+                Type = Plotly.Blazor.LayoutLib.XAxisLib.TypeEnum.Date,
             }
         },
             ClickMode = ClickModeFlag.Event,
@@ -215,6 +227,21 @@
         layout.XAxis[0].Tick0 = Cycle.StartDate.ToString("yyyy-MM-dd");
     }
 
+    private void MergeCycle(bool below)
+    {
+        if (below)
+        {
+            Repo.DeleteCycleAsync(Cycle.StartDate.ToKey());
+        }
+        else
+        {
+            var cycleToRemove = Repo.Cycles.FirstOrDefault(q => q.Index == CycleIndex + 1);
+            if (cycleToRemove is not null)
+            {
+                Repo.DeleteCycleAsync(cycleToRemove.Item.StartDate.ToKey());
+            }
+        }
+    }
 
     /// <summary>
     /// Method which is called by JSRuntime once a plot has been clicked, to invoke the passed in Action

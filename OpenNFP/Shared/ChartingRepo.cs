@@ -23,6 +23,7 @@ namespace OpenNFP.Shared
             get
             {
                 return _knownCycles.Values.Reverse()
+                    .Where(q => !q.Deleted)
                     .Select((v, i) => new CycleIndex<Cycle>() { Index = _knownCycles.Count - i, Item = v })
                     .ToList();
             }
@@ -30,11 +31,11 @@ namespace OpenNFP.Shared
 
         public ImportExportView ExportModel => new()
         {
-            Cycles = _knownCycles.Values.ToList(),
+            Cycles = _knownCycles.Values.Where(q => !q.Deleted).ToList(),
             Records = _dayRepo.Values.ToList()
         };
 
-        public int CycleCount => _knownCycles.Count;
+        public int CycleCount => _knownCycles.Values.Where(q => !q.Deleted).Count();
         public ChartSettings Settings => _settings;
 
         private ILogger<IChartingRepo> Logger { get; }
@@ -127,7 +128,8 @@ namespace OpenNFP.Shared
         {
             if (_knownCycles.ContainsKey(date))
             {
-                _knownCycles.Remove(date);
+                //_knownCycles.Remove(date);
+                _knownCycles[date].Deleted = true;
                 await _saveSettings();
                 return true;
             }
@@ -153,8 +155,11 @@ namespace OpenNFP.Shared
             {
                 foreach (var cycle in rawData.Cycles)
                 {
-                    _knownCycles[cycle.StartDate.ToKey()] = cycle;
-                    _settings.UpdateStartEndDates(cycle.StartDate);
+                    if (!cycle.Deleted)
+                    {
+                        _knownCycles[cycle.StartDate.ToKey()] = cycle;
+                        _settings.UpdateStartEndDates(cycle.StartDate);
+                    }
                 }
                 foreach (var rec in rawData.Records)
                 {
@@ -180,13 +185,32 @@ namespace OpenNFP.Shared
         {
             _addAutoCycle(_settings.StartDate);
 
-            DateTime curDate = _settings.StartDate;
+            if (_knownCycles.Count > 2)
+            {
+                // find and suto delete short cycles
+                var cycleStartDays = _knownCycles.Keys.ToList();
+
+                for (int i = 2; i < cycleStartDays.Count; i++)
+                {
+                    var prevCycleStart = cycleStartDays[i - 1];
+                    var curCycleStart = cycleStartDays[i];
+                    var daySpan = Convert.ToInt32(curCycleStart) - Convert.ToInt32(prevCycleStart);
+                    if (daySpan < 5)
+                    {
+                        _knownCycles[prevCycleStart].Deleted = true;
+                    }
+
+                }
+            }
+
+
+                DateTime curDate = _settings.StartDate;
             int cycleDay = 1;
             Cycle? prevCycle = null;
             do
             {
                 string curkey = curDate.ToKey();
-                if (_knownCycles.ContainsKey(curkey))
+                if (_knownCycles.ContainsKey(curkey) && !_knownCycles[curkey].Deleted)
                 {
                     cycleDay = 1;
                     if (prevCycle != null)
@@ -231,7 +255,7 @@ namespace OpenNFP.Shared
             await _computeCycleDays();
         }
 
-        
+
 
         public void Clear()
         {
@@ -243,12 +267,15 @@ namespace OpenNFP.Shared
 
         public async Task MergeAsync(ImportExportView secondaryData)
         {
-            foreach(var c in secondaryData.Cycles)
+            foreach (var c in secondaryData.Cycles)
             {
-                _knownCycles.TryAdd(c.StartDate.ToKey(), c);
-                _settings.UpdateStartEndDates(c.StartDate);
+                if (!c.Deleted)
+                {
+                    _knownCycles.TryAdd(c.StartDate.ToKey(), c);
+                    _settings.UpdateStartEndDates(c.StartDate);
+                }
             }
-            
+
             var changedRecords = secondaryData.Records.Where(q => q.ModifiedOn > _settings.LastSyncDate);
             foreach (var record in changedRecords)
             {
@@ -314,7 +341,7 @@ namespace OpenNFP.Shared
             {
                 _settings.LastEditDate = DateTime.UtcNow;
             }
-            if(_knownCycles.Count > 0)
+            if (_knownCycles.Count > 0)
             {
                 _settings.Cycles.Clear();
             }

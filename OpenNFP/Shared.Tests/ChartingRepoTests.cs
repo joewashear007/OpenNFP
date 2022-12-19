@@ -214,5 +214,35 @@ namespace OpenNFP.Shared.Tests
 
             Assert.IsTrue(repo.Settings.LastSyncDate > DateTime.MinValue, $"Sync Time {repo.Settings.LastSyncDate} should be greater than {DateTime.MinValue}");
         }
+
+        [TestMethod]
+        public async Task Sync_SmallCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(1, 25))
+            {
+                await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-1) }, startNewCycle: i == 5);
+            }
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend(), new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(3, 23))
+            {
+                await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-1) }, startNewCycle: i == 6);
+            }
+
+
+            await repo.MergeAsync(secondaryRepo.ExportModel);
+
+            Assert.AreEqual(2, repo.CycleCount, $"Expected Cycle after Merge");
+            var expected_cycles = new List<string>() { DateTime.Today.AddDays(-25).ToKey(), DateTime.Today.AddDays(-4).ToKey() };
+            var start_cycles = repo.ExportModel.Cycles.Select(q => q.StartDate.ToKey()).ToList();
+            Console.WriteLine(string.Join(",", start_cycles));
+            Console.WriteLine(string.Join(",", expected_cycles));
+            CollectionAssert.AreEqual(expected_cycles, start_cycles);
+
+            Assert.IsTrue(repo.Settings.LastSyncDate > DateTime.MinValue, $"Sync Time {repo.Settings.LastSyncDate} should be greater than {DateTime.MinValue}");
+        }
     }
 }

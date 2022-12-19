@@ -13,6 +13,7 @@ namespace OpenNFP.Shared.Models
         private DateTime startDate = DateTime.Today;
         private DateTime? endDate = null;
         private string notes = string.Empty;
+        private bool deleted = false;
 
         public DateTime StartDate
         {
@@ -48,6 +49,19 @@ namespace OpenNFP.Shared.Models
                 if (value != notes )
                 {
                     notes = value;
+                    ModifiedOn = DateTime.UtcNow;
+                }
+            }
+        }
+
+        public bool Deleted
+        {
+            get => deleted;
+            set
+            {
+                if (value != deleted)
+                {
+                    deleted = value;
                     ModifiedOn = DateTime.UtcNow;
                 }
             }
