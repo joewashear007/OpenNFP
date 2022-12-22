@@ -8,6 +8,10 @@
 @inject ILogger<MainLayout> Logger;
 @inject IAppState AppState;
 
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -50,9 +54,6 @@
 </MudLayout>
 
 @code {
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationStateTask { get; set; }
-
     private string syncIconClasses = string.Empty;
     private string syncIcon = Icons.Material.Outlined.CloudSync;
     private bool syncIconDisabled = false;
@@ -150,20 +151,20 @@
     {
         if (firstRender)
         {
-            if (authenticationStateTask != null && isMainPage && ShouldRunSync)
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user?.Identity?.IsAuthenticated ?? false && isMainPage && ShouldRunSync)
             {
-                var authenticationState = await authenticationStateTask;
-                if (authenticationState?.User?.Identity?.IsAuthenticated ?? false)
-                {
-                    await Sync();
-                    AppState.ShouldRunSyncOnStartup = false;
-                    StateHasChanged();
-                }
-                else
-                {
-                    Logger.LogWarning("User is not authenticated");
-                }
+                await Sync();
+                AppState.ShouldRunSyncOnStartup = false;
+                StateHasChanged();
             }
+            else
+            {
+                Logger.LogWarning("User is not authenticated");
+            }
+
         }
     }
+
 }
