@@ -79,8 +79,8 @@
     <script src="/_framework/blazor.webassembly.js"></script>
     <!--<script>navigator.serviceWorker.register('service-worker.js');</script>-->
     <script src="/_content/MudBlazor/MudBlazor.min.js"></script>
-    <!--<script src="/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>-->
-    <script src="/AuthenticationService.js"></script>
+    <script src="/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
+    <!--<script src="/AuthenticationService.js"></script>-->
 
     <!-- Start Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
@@ -189,6 +189,27 @@
         }
 
 
+    </script>
+
+    <script>
+        /*
+         * Override the createUserManagerCore with more options from the oidc library
+         * Using local storage to save the login betwene seesions
+         * Added the auto silent renew token
+         * */
+        (function () {
+            let defaultFunc = window.AuthenticationService.createUserManagerCore
+            function createUserManagerCore_updated(t) {
+                t.userStore = new window.e['671'].exports.WebStorageStateStore({ store: window.localStorage });
+                t.automaticSilentRenew = true;
+                let e = defaultFunc(t)
+                e.events.addAccessTokenExpiring(async () => { console.log(`accessTokenExpiring: ${e}`); });
+                e.events.addAccessTokenExpired(async () => { console.log(`accessTokenExpired: ${e}`); });
+                e.events.addSilentRenewError(async () => { console.log(`silentRenewError: ${e}`); });
+                return e;
+            }
+            window.AuthenticationService.createUserManagerCore = createUserManagerCore_updated;
+        })()
     </script>
     <!-- Import the plotly.js library -->
     <script src="/_content/Plotly.Blazor/plotly-latest.min.js" type="text/javascript"></script>
