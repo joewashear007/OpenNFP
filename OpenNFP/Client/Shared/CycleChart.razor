@@ -19,6 +19,10 @@
         <MudChip Label="true">Cycle @CycleIndex</MudChip>
         <MudText Align="Align.Center" Typo="Typo.subtitle1"></MudText>
         <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----") [Cycle Length: @(Cycle.Length) @(LimitDays && Cycle.Length > 40 ? "Limited to 40 Days" : "") ]</MudText>
+        @if (LimitDays)
+        {
+            <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Filled.OpenWith"></MudIconButton>
+        }
     </MudCardHeader>
     <MudCardContent Class="p-0">
         @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
@@ -40,7 +44,7 @@
         }
         else
         {
-            <div style="overflow-x:scroll; overflow-y:hidden; padding-bottom:20px">
+            <div style="@(LimitDays ? "overflow-x:scroll; overflow-y:hidden;" : "") padding-bottom:20px">
 
                 <PlotlyChart @bind-Config="config"
                          @bind-Layout="layout"

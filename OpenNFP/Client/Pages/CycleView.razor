@@ -1,0 +1,51 @@
+﻿@page "/cycle/{date}"
+@using OpenNFP.Client.Utils
+
+@inject NavigationManager MyNavigationManager
+@inject IChartingRepo ChartingRepo
+
+<MudContainer MaxWidth="MaxWidth.False">
+    @if (Cycle is not null)
+    {
+        <div style="padding-top:15px;">
+            <CycleChart CycleIndex="@Cycle.Index" Cycle="@Cycle.Item" LimitDays=false />
+        </div>
+    } else
+    {
+        <h1>
+            Loading ...
+        </h1>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string date { get; set; } = string.Empty;
+
+    public DateTime CycleDate { get; set; } = DateTime.MinValue;
+
+    private CycleIndex<Cycle>? Cycle { get; set; } = null;
+
+    protected override void OnParametersSet()
+    {
+        DateTime? d = date.ToDateTime();
+        if (d.HasValue)
+        {
+            CycleDate = d.Value;
+        }
+        else
+        {
+            throw new InvalidOperationException($"Cycle date is invalid {date}");
+        }
+
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Cycle = ChartingRepo.Cycles.FirstOrDefault(q => q.Item.StartDate.Date == CycleDate.Date);
+            StateHasChanged();
+        }
+    }
+}
