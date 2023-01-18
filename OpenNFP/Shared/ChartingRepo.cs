@@ -276,22 +276,29 @@ namespace OpenNFP.Shared
                 }
             }
 
-            var changedRecords = secondaryData.Records.Where(q => q.ModifiedOn > _settings.LastSyncDate);
-            foreach (var record in changedRecords)
+            var changedRecords = secondaryData.Records.Where(q => q.ModifiedOn > _settings.LastSyncDate && !q.IsEmpty());
+            foreach (var incommingRecord in changedRecords)
             {
-                if (await _dayRepo.ExistsAsync(record.IndexKey))
+                if (await _dayRepo.ExistsAsync(incommingRecord.IndexKey))
                 {
+                    var currentRecord = await _dayRepo.GetAsync(incommingRecord.IndexKey);
+
+                    // If the current record is empty, take the new one
+                    if (currentRecord.IsEmpty())
+                    {
+                        await _addUpdateRecordInternalAsync(incommingRecord, false);
+                    }
+
                     // Both records have been modified after the sync timestamps
                     // currently taken the newest record, make this option later
-                    var oldRec = await _dayRepo.GetAsync(record.IndexKey);
-                    if (record.ModifiedOn > oldRec.ModifiedOn)
+                    if (incommingRecord.ModifiedOn > currentRecord.ModifiedOn)
                     {
-                        await _addUpdateRecordInternalAsync(record, false);
+                        await _addUpdateRecordInternalAsync(incommingRecord, false);
                     }
                 }
                 else
                 {
-                    await _addUpdateRecordInternalAsync(record, false);
+                    await _addUpdateRecordInternalAsync(incommingRecord, false);
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Plotly.Blazor.Traces.SankeyLib;
+using System.Text.Json.Serialization;
 
 namespace OpenNFP.Shared.Models
 {
@@ -187,6 +188,33 @@ namespace OpenNFP.Shared.Models
                 }
                 return label;
             }
+        }
+
+
+        public bool IsEmpty()
+        {
+            return _temperature == null
+                && _clearBlueResult == ClearBlueResult.Unknown
+                && _coitus == false
+                && _pregnancyTest == TestResult.Unknown
+                && _ovulationTest == TestResult.Unknown
+                && _cervixOpening == CervixOpening.Unknown
+                && _cervixTexture == CervixTexture.Unknown
+                && _mucusSensation == MucusSensation.Unknown
+                && _mucusCharacteristic == MucusCharacteristic.Unknown
+                && _menstruationFlow == MenstruationFlow.Unknown
+                && _notes == "";
+        }
+
+        public override string ToString()
+        {
+            string value = $"{Date.ToKey()} - ";
+            foreach (var p in typeof(DayRecord).GetProperties().Where(q => q.PropertyType != typeof(DateTime)))
+            {
+                value += " " + p.Name + ":" + p.GetValue(this);
+            }
+
+            return value;
         }
     }
 }

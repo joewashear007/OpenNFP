@@ -244,5 +244,38 @@ namespace OpenNFP.Shared.Tests
 
             Assert.IsTrue(repo.Settings.LastSyncDate > DateTime.MinValue, $"Sync Time {repo.Settings.LastSyncDate} should be greater than {DateTime.MinValue}");
         }
+
+
+        [TestMethod]
+        public async Task Sync_KeepEmptyDays()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 5))
+            {
+                await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-4), Temperature = 97 + i * .1M });
+            }
+
+            Console.WriteLine("First Repo Cycles:");
+            repo.ExportModel.Records.ForEach(Console.WriteLine);
+            Assert.IsTrue(repo.ExportModel.Records.All(q => q.IsEmpty() == false), $"Expected all cycles days to be not empty to start");
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend(), new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 5))
+            {
+                await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow });
+            }
+
+            Console.WriteLine("Secondary Repo Cycles:");
+            secondaryRepo.ExportModel.Records.ForEach(Console.WriteLine);
+            Assert.IsTrue(secondaryRepo.ExportModel.Records.All(q => q.IsEmpty()), $"Expected all secondary cycles days to be empty to start");
+
+            await repo.MergeAsync(secondaryRepo.ExportModel);
+
+            Console.WriteLine("Merged Cycles:");
+            repo.ExportModel.Records.ForEach(Console.WriteLine);
+            Assert.IsTrue(repo.ExportModel.Records.All(q => q.IsEmpty() == false), $"Expected all cycles days to be not empty at the end");
+        }
     }
 }
