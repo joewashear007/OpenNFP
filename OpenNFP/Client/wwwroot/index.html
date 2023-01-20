@@ -188,6 +188,12 @@
             })
         }
 
+        window.odic_login = function () {
+            window.AuthenticationService.instance['_userManager'].signinRedirect();
+        };
+        window.oidc_info = function () {
+            return window.AuthenticationService.instance['_userManager'].getUser().then(u => JSON.stringify({ expired: u.expired, expires_at: u.expires_at, expires_in: u.expires_in }))
+        }
 
     </script>
 
@@ -203,12 +209,19 @@
                 t.userStore = new window.e['671'].exports.WebStorageStateStore({ store: window.localStorage });
                 t.automaticSilentRenew = true;
                 let e = defaultFunc(t)
-                e.events.addAccessTokenExpiring(async () => { console.log(`accessTokenExpiring: ${e}`); });
-                e.events.addAccessTokenExpired(async () => { console.log(`accessTokenExpired: ${e}`); });
+                e.events.addAccessTokenExpiring(async () => {
+                    console.log(`accessTokenExpiring: ${e}`);
+                    e.signinSilent();
+                });
+                e.events.addAccessTokenExpired(async () => {
+                    console.log(`accessTokenExpired: ${e}`);
+                    e.signinSilent();
+                });
                 e.events.addSilentRenewError(async () => { console.log(`silentRenewError: ${e}`); });
                 return e;
             }
             window.AuthenticationService.createUserManagerCore = createUserManagerCore_updated;
+
         })()
     </script>
     <!-- Import the plotly.js library -->

@@ -16,7 +16,7 @@
 @inject IChartingRepo repo;
 @inject IDialogService DialogService;
 @inject IRemoteStorageBackend remoteStorageBackend;
-
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Sync Data To Google Drive</PageTitle>
 
@@ -101,6 +101,10 @@
                             <MudText>Cancel</MudText>
                     </MudButton>
 
+                    <MudButton OnClick="OidcLogin" Variant="Variant.Text" Color="Color.Warning" Disabled="@_processing">
+                        <MudText>Force Login</MudText>
+                    </MudButton>
+
                 </MudCardActions>
             </MudCard>
         </Authorized>
@@ -113,6 +117,11 @@
     <code>
         @ErrorMsg
     </code>
+    <hr />
+    <h6>Oidc Info</h6>
+    <code>
+        @OidcInfo
+    </code>
 
 </MudContainer>
 @code {
@@ -122,6 +131,7 @@
     SyncInfo File { get; set; } = SyncInfo.Empty;
     string FileContent { get; set; } = string.Empty;
     string ErrorMsg { get; set; } = string.Empty;
+    string OidcInfo { get; set; } = string.Empty;
     CancellationTokenSource cancellationTokenSource { get; set; } = new(); 
 
     protected override async void OnAfterRender(bool firstRender)
@@ -129,6 +139,7 @@
         if (firstRender)
         {
             await refreshFileInfo();
+            OidcInfo = await JSRuntime.InvokeAsync<string>("oidc_info");
             StateHasChanged();
         }
     }
@@ -143,6 +154,7 @@
         {
             ErrorMsg = "";
             _loading = true;
+            OidcInfo = await JSRuntime.InvokeAsync<string>("oidc_info");
             File = await remoteStorageBackend.GetLastSyncInfo(cancellationTokenSource.Token);
         }
 
@@ -214,6 +226,21 @@
             _processing = true;
             await repo.SyncAsync(remoteStorageBackend, cancellationTokenSource.Token);
             _processing = false;
+        }
+        catch (Exception e)
+        {
+            ErrorMsg = e.Message + Environment.NewLine + e.StackTrace;
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+    public async Task OidcLogin()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("odic_login");
         }
         catch (Exception e)
         {
