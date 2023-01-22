@@ -3,6 +3,7 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Http;
 using Google.Apis.Services;
 using Google.Apis.Upload;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using OpenNFP.Shared.Interfaces;
 using OpenNFP.Shared.Models;
@@ -34,6 +35,7 @@ namespace OpenNFP.Shared.Backend
 
         private DriveService? driveService { get; set; }
         public IAccessTokenProvider TokenProvider { get; }
+        public NavigationManager NavigationManager { get; }
 
         private readonly AccessTokenRequestOptions options = new()
         {
@@ -43,9 +45,10 @@ namespace OpenNFP.Shared.Backend
 
         public string FileName { get; set; } = "opennfp.json";
 
-        public GoogleStorageBackend(IAccessTokenProvider tokenProvider)
+        public GoogleStorageBackend(IAccessTokenProvider tokenProvider, NavigationManager navigationManager)
         {
             TokenProvider = tokenProvider;
+            NavigationManager = navigationManager;
         }
 
 
@@ -143,7 +146,9 @@ namespace OpenNFP.Shared.Backend
                 }
                 else
                 {
-                    throw new InvalidOperationException("Unable to get Google Drive Token");
+                    // Navigate to the sign in page
+                    NavigationManager.NavigateTo(tokenResult.InteractiveRequestUrl);
+                    //throw new InvalidOperationException("Unable to get Google Drive Token");
                 }
             }
             return driveService;
