@@ -109,7 +109,7 @@ namespace OpenNFP.Shared.Backend
         {
             using var stream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(obj));
             DriveService? service = await GetDriveService(token);
-
+            
             var fileMetadata = new Google.Apis.Drive.v3.Data.File() { Name = key.FileName };
 
             ResumableUpload<Google.Apis.Drive.v3.Data.File, Google.Apis.Drive.v3.Data.File> request;
@@ -146,9 +146,7 @@ namespace OpenNFP.Shared.Backend
                 }
                 else
                 {
-                    // Navigate to the sign in page
-                    NavigationManager.NavigateTo(tokenResult.InteractiveRequestUrl);
-                    //throw new InvalidOperationException("Unable to get Google Drive Token");
+                    throw new AccessTokenNotAvailableException(NavigationManager, tokenResult, options.Scopes);
                 }
             }
             return driveService;
