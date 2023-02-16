@@ -48,7 +48,7 @@
         <NavMenu />
     </MudDrawer>
     <MudMainContent>
-            @Body
+        @Body
     </MudMainContent>
 </MudLayout>
 
@@ -58,7 +58,6 @@
     private bool syncIconDisabled = false;
     bool _drawerOpen = false;
 
-    public bool ShouldRunSync { get; set; } = true;
     public bool isMainPage { get => new Uri(uriHelper.Uri).Segments.Count() == 1; }
 
     void DrawerToggle()
@@ -91,14 +90,15 @@
 
     private async Task Sync()
     {
+        MudBlazor.Snackbar? _snackbar = null;
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         try
         {
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             syncIconClasses = "icon-spin";
             syncIcon = Icons.Material.Outlined.Sync;
             syncIconDisabled = true;
             StateHasChanged();
-            var _snackbar = Snackbar.Add("Syncing Data", Severity.Normal, config =>
+            _snackbar = Snackbar.Add("Syncing Data", Severity.Normal, config =>
             {
                 config.Icon = Icons.Material.Outlined.Sync;
                 config.VisibleStateDuration = int.MaxValue;
@@ -125,8 +125,26 @@
         }
         catch (AccessTokenNotAvailableException tokenEx)
         {
-            Logger.LogWarning($"Failed to get token, redirecting to sign in page");
-            tokenEx.Redirect();
+            Logger.LogWarning($"Failed to get token, prompting for signin page");
+            if (_snackbar != null)
+            {
+                Snackbar.Remove(_snackbar);
+            }
+            Snackbar.Add("Google Auth Expired", Severity.Warning, config =>
+            {
+                config.Icon = Icons.Material.Outlined.Sync;
+                config.VisibleStateDuration = int.MaxValue;
+                config.Action = "Sign In";
+                config.ActionVariant = Variant.Text;
+                config.ActionColor = Color.Warning;
+                config.Onclick = snackbar =>
+                {
+                    tokenEx.Redirect();
+                    return Task.CompletedTask;
+                };
+            });
+
+
         }
         catch (Exception e)
         {
@@ -155,17 +173,32 @@
     {
         if (firstRender)
         {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            if (user?.Identity?.IsAuthenticated ?? false && isMainPage && ShouldRunSync)
+            bool shouldSync = AppState.ShouldRunSyncOnStartup && isMainPage;
+            if (DateTime.Now.AddMinutes(-15) < ChartingRepo.Settings.LastSyncDate)
             {
-                await Sync();
-                AppState.ShouldRunSyncOnStartup = false;
-                StateHasChanged();
+                // we ran the sync with in the last x mins, so skip it
+                shouldSync = false;
+            }
+
+            if (shouldSync)
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+
+                if (user?.Identity?.IsAuthenticated ?? false)
+                {
+                    await Sync();
+                    AppState.ShouldRunSyncOnStartup = false;
+                    StateHasChanged();
+                }
+                else
+                {
+                    Logger.LogWarning("User is not authenticated");
+                }
             }
             else
             {
-                Logger.LogWarning("User is not authenticated");
+                Logger.LogInformation("Skipping Sync since it was not requested");
             }
 
         }
