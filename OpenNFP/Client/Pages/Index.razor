@@ -3,16 +3,21 @@
 
 @inject NavigationManager MyNavigationManager
 @inject IChartingRepo ChartingRepo
+@inject IAppState AppState
 
 <MudContainer MaxWidth="MaxWidth.False">
+    @{
+        int index = 0;
+    }
     @foreach (var ci in cycles)
     {
         <div style="padding-top:15px;">
-            <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true />
+            <CycleChart CycleIndex="@ci.Index" Cycle="@ci.Item" LimitDays=true  RenderChart=@(index < AppState.InitialCyclesToLoad )/>
         </div>
+        index++;
     }
 
-    @if (!AllCyclesLoaded)
+    @*@if (!AllCyclesLoaded)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="my-auto mx-4" FullWidth="true" OnClick="LoadNext">
             @if (Loading)
@@ -25,36 +30,34 @@
                 <MudText>Load More Charts</MudText>
             }
         </MudButton>
-    }
+    }*@
 </MudContainer>
 
 @code {
-    [CascadingParameter(Name = "AppState")]
-    protected AppState? AppState { get; set; }
-
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
-    private bool AllCyclesLoaded { get; set; } = false;
-    private bool Loading { get; set; } = true;
+    //private bool AllCyclesLoaded { get; set; } = false;
+    //private bool Loading { get; set; } = true;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
-            await LoadNext();
+            cycles = ChartingRepo.Cycles.ToList();
+            //await LoadNext();
             StateHasChanged();
         }
     }
 
-    public async Task LoadNext()
-    {
-        Loading = true;
-        await Task.Delay(100);
-        int currentCount = cycles.Count;
-        foreach (var cycle in ChartingRepo.Cycles.Skip(currentCount).Take(3))
-        {
-            cycles.Add(cycle);
-        }
-        AllCyclesLoaded = cycles.Count == ChartingRepo.CycleCount;
-        Loading = false;
-    }
+    //public async Task LoadNext()
+    //{
+    //    Loading = true;
+    //    await Task.Delay(100);
+    //    int currentCount = cycles.Count;
+    //    foreach (var cycle in ChartingRepo.Cycles.Skip(currentCount).Take(3))
+    //    {
+    //        cycles.Add(cycle);
+    //    }
+    //    AllCyclesLoaded = cycles.Count == ChartingRepo.CycleCount;
+    //    Loading = false;
+    //}
 }

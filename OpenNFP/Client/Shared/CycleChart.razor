@@ -25,32 +25,39 @@
         }
     </MudCardHeader>
     <MudCardContent Class="p-0">
-        @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
+        @if (RenderChart)
         {
-            <MudAlert Severity="Severity.Warning">
-                This chart is too short! <br />
-                <MudButtonGroup Color="Color.Warning" Variant="Variant.Text">
-                    <MudButton OnClick="() => MergeCycle(below:false)">Merge With Above Cycle</MudButton>
-                    <MudButton OnClick="() => MergeCycle(below:true)">Merge with Below Cycle</MudButton>
-                </MudButtonGroup>
-            </MudAlert>
-        }
-        @if (Loading)
-        {
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="60px" />
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="200px" />
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
-            <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
-        }
-        else
-        {
-            <div style="@(LimitDays ? "overflow-x:scroll; overflow-y:hidden;" : "") padding-bottom:20px">
+            @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
+            {
+                <MudAlert Severity="Severity.Warning">
+                    This chart is too short! <br />
+                    <MudButtonGroup Color="Color.Warning" Variant="Variant.Text">
+                        <MudButton OnClick="() => MergeCycle(below:false)">Merge With Above Cycle</MudButton>
+                        <MudButton OnClick="() => MergeCycle(below:true)">Merge with Below Cycle</MudButton>
+                    </MudButtonGroup>
+                </MudAlert>
+            }
+            @if (Loading)
+            {
+                <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="60px" />
+                <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="200px" />
+                <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
+                <MudSkeleton keletonType="SkeletonType.Rectangle" Width="100%" Height="100px" />
+            }
+            else
+            {
+                <div style="@(LimitDays ? "overflow-x:scroll; overflow-y:hidden;" : "") padding-bottom:20px">
 
-                <PlotlyChart @bind-Config="config"
+                    <PlotlyChart @bind-Config="config"
                          @bind-Layout="layout"
                          @bind-Data="data"
                          @ref="chart" />
-            </div>
+                </div>
+            }
+        }
+        else
+        {
+            <MudButton OnClick="() => RenderChart = true">Load Chart</MudButton>
         }
     </MudCardContent>
 </MudCard>
@@ -66,6 +73,11 @@
     [Parameter]
     public bool LimitDays { get; set; } = false;
 
+    [Parameter]
+    public bool RenderChart { get; set; } = true;
+
+
+    private bool firstRenderComplete = false;
     public bool Loading { get; set; } = true;
     private PlotlyChart? chart;
     private DotNetObjectReference<CycleChart>? _chartRef;
@@ -137,88 +149,16 @@
             Height = 500,
         };
 
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRenderComplete && RenderChart)
         {
-            await Task.Delay(100);
-            Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Loading Data");
-            if (Cycle != null)
-            {
-                var viewModel = await Generator.GetTracesAsync(Cycle.StartDate, LimitDays);
-
-                Scatter tempTrace = new Scatter
-                    {
-                        Mode = ModeFlag.Lines | ModeFlag.Markers,
-                        X = viewModel.Days,
-                        Y = viewModel.Temp.Values,
-                        YAxis = "y",
-                        ShowLegend = false,
-                    };
-
-                HeatMap hm = new HeatMap()
-                    {
-                        X = viewModel.Days,
-                        Y = new List<object>() { "Monitor", "Cervix", "Mucus", "Mens" },
-                        Z = new List<object>() {
-                            viewModel.Monitor.Values,
-                            viewModel.Cervix.Values,
-                            viewModel.Mucus.Values,
-                            viewModel.Mens.Values,
-                        },
-                        ShowLegend = false,
-                        YAxis = "y2",
-                        ShowScale = false,
-                        XGap = 3,
-                        YGap = 1,
-                        ColorScale = colorScale
-                    };
-                HeatMap hmDate = new HeatMap()
-                    {
-                        X = viewModel.Days,
-                        Y = new List<object>() { "Day" },
-                        Z = new List<object>() {
-                            viewModel.Index.Values
-                        },
-                        ShowLegend = false,
-                        YAxis = "y3",
-                        ShowScale = false,
-                        XGap = 3,
-                        YGap = 1,
-                    };
-
-
-                data.Add(tempTrace);
-                data.Add(hm);
-                data.Add(hmDate);
-                layout.Annotations.AddRange(viewModel.Monitor.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
-                layout.Annotations.AddRange(viewModel.Cervix.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 1, Text = q, ShowArrow = false, Font = font }));
-                layout.Annotations.AddRange(viewModel.Mucus.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 2, Text = q, ShowArrow = false, Font = font }));
-                layout.Annotations.AddRange(viewModel.Mens.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
-
-                layout.Annotations.AddRange(viewModel.Index.Annotations
-                    .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
-
-                Loading = false;
-                StateHasChanged();
-                await chart.React();
-                if (_chartRef == null)
-                {
-                    _chartRef = DotNetObjectReference.Create(this);
-                }
-                await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
-            }
-            else
-            {
-                throw new InvalidOperationException("NULL DATE ON CYCLE");
-            }
-
+            await SetupChart();
+            firstRenderComplete = true;
         }
     }
+
     protected override void OnParametersSet()
     {
         int maxCycleLength = Math.Max(Cycle?.Length ?? 0, 10);
@@ -229,6 +169,85 @@
         layout.Width = maxCycleLength * 50;
         layout.XAxis[0].Range = new List<object> { Cycle.StartDate.AddHours(-12).ToString("yyyy-MM-dd"), Cycle.StartDate.AddDays(maxCycleLength).ToString("yyyy-MM-dd"), };
         layout.XAxis[0].Tick0 = Cycle.StartDate.ToString("yyyy-MM-dd");
+    }
+
+    private async Task SetupChart()
+    {
+        await Task.Delay(100);
+        Console.WriteLine($" Cycle {Cycle?.StartDate.ToKey()} - Loading Data");
+        if (Cycle != null)
+        {
+            var viewModel = await Generator.GetTracesAsync(Cycle.StartDate, LimitDays);
+
+            Scatter tempTrace = new Scatter
+                {
+                    Mode = ModeFlag.Lines | ModeFlag.Markers,
+                    X = viewModel.Days,
+                    Y = viewModel.Temp.Values,
+                    YAxis = "y",
+                    ShowLegend = false,
+                };
+
+            HeatMap hm = new HeatMap()
+                {
+                    X = viewModel.Days,
+                    Y = new List<object>() { "Monitor", "Cervix", "Mucus", "Mens" },
+                    Z = new List<object>() {
+                            viewModel.Monitor.Values,
+                            viewModel.Cervix.Values,
+                            viewModel.Mucus.Values,
+                            viewModel.Mens.Values,
+                        },
+                    ShowLegend = false,
+                    YAxis = "y2",
+                    ShowScale = false,
+                    XGap = 3,
+                    YGap = 1,
+                    ColorScale = colorScale
+                };
+            HeatMap hmDate = new HeatMap()
+                {
+                    X = viewModel.Days,
+                    Y = new List<object>() { "Day" },
+                    Z = new List<object>() {
+                            viewModel.Index.Values
+                        },
+                    ShowLegend = false,
+                    YAxis = "y3",
+                    ShowScale = false,
+                    XGap = 3,
+                    YGap = 1,
+                };
+
+
+            data.Add(tempTrace);
+            data.Add(hm);
+            data.Add(hmDate);
+            layout.Annotations.AddRange(viewModel.Monitor.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
+            layout.Annotations.AddRange(viewModel.Cervix.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 1, Text = q, ShowArrow = false, Font = font }));
+            layout.Annotations.AddRange(viewModel.Mucus.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 2, Text = q, ShowArrow = false, Font = font }));
+            layout.Annotations.AddRange(viewModel.Mens.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
+
+            layout.Annotations.AddRange(viewModel.Index.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
+
+            Loading = false;
+            StateHasChanged();
+            await chart.React();
+            if (_chartRef == null)
+            {
+                _chartRef = DotNetObjectReference.Create(this);
+            }
+            await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
+        }
+        else
+        {
+            throw new InvalidOperationException("NULL DATE ON CYCLE");
+        }
     }
 
     private void MergeCycle(bool below)
