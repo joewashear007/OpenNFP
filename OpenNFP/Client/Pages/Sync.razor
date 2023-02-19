@@ -28,7 +28,7 @@
         <Authorized>
             <MudCard>
                 <MudCardHeader>
-                    Hello, @context.User.Identity.Name! Your Last Sync was on @(repo.Settings.LastSyncDate.ToString("g"))
+                    Hello, @context.User?.Identity?.Name! Your Last Sync was on @(repo.Settings.LastSyncDate.ToString("g"))
                 </MudCardHeader>
                 <MudCardContent>
                     <pre>

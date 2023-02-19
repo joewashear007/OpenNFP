@@ -4,6 +4,7 @@
 @inject IChartingRepo ChartingRepo
 @inject ILocalStorageService localStorage
 @inject NavigationManager uriHelper;
+@inject ILogger<EditDayForm> Logger;
 
 <PageTitle>Edit Page: @date (Cycle Day: #)</PageTitle>
 
@@ -125,7 +126,7 @@
     public string date { get; set; } = string.Empty;
 
     DateTime dateVal { get; set; } = DateTime.Today;
-    DayRecord? Day { get; set; } = null!;
+    DayRecord? Day { get; set; } = null;
     bool success = true;
     string[] errors = { };
 
@@ -224,7 +225,7 @@
             if (form.IsValid)
             {
                 bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(Day.IndexKey);
-                Console.WriteLine($"Saving Day {Day.Date} - State Cycle: {startCycle}");
+                Logger.LogInformation($"Saving Day {Day.Date} - State Cycle: {startCycle}");
                 if (!startCycle && isAlreadyCycleStart)
                 {
                     await ChartingRepo.DeleteCycleAsync(Day.IndexKey);
@@ -235,13 +236,13 @@
         }
         else
         {
-            Console.WriteLine("Error - Day is null");
+            Logger.LogInformation("Error - Day is null");
         }
     }
 
     private async Task ChangeDate(DateTime? d)
     {
-        Console.WriteLine($"Changeing Date: {d}");
+        Logger.LogInformation($"Changeing Date: {d}");
         dateVal = d.GetValueOrDefault();
         date = dateVal.ToKey();
         Day = await ChartingRepo.GetDayAsync(date);

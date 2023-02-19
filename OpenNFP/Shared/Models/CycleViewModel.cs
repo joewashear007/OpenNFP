@@ -16,6 +16,7 @@ namespace OpenNFP.Shared.Models
         public ChartTraceData Mens { get; } = new ChartTraceData();
         public ChartTraceData Temp { get; } = new ChartTraceData();
         public ChartTraceData Index { get; } = new ChartTraceData();
+        public ChartTraceData Coitus { get; } = new ChartTraceData();
 
 
     }

@@ -44,7 +44,7 @@
     {
         if (firstRender)
         {
-            Cycle = ChartingRepo.Cycles.FirstOrDefault(q => q.Item.StartDate.Date == CycleDate.Date);
+            Cycle = ChartingRepo.Cycles.FirstOrDefault(q => q.Item?.StartDate.Date == CycleDate.Date);
             StateHasChanged();
         }
     }

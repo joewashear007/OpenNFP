@@ -44,6 +44,7 @@ namespace OpenNFP.Shared
                 vm.Cervix.Add(day.Item?.CervixChartValue ?? 0, day.Item?.CervixChartLabel ?? string.Empty);
                 vm.Mucus.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MucusChartLabel ?? string.Empty);
                 vm.Mens.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MenstruationChartLabel ?? string.Empty);
+                vm.Coitus.Add(day.Item?.Coitus);
                 vm.Index.Add(day.Index);
             }
 

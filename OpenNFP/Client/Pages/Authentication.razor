@@ -4,6 +4,6 @@
 <RemoteAuthenticatorView Action="@Action" />
 
 @code {
-    [Parameter]
-    public string Action { get; set; }
+    [Parameter, EditorRequired]
+    public string Action { get; set; } = null!;
 }

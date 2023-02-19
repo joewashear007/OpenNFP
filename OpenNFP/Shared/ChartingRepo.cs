@@ -58,8 +58,7 @@ namespace OpenNFP.Shared
                 if (cycle != null)
                 {
                     DateTime day = cycleStart;
-                    bool displayLimitReached = false;
-
+                    bool displayLimitReached;
                     do
                     {
                         displayLimitReached = i >= _settings.CycleDisplayLimit && limit;
@@ -126,10 +125,9 @@ namespace OpenNFP.Shared
 
         public async Task<bool> DeleteCycleAsync(string date)
         {
-            if (_knownCycles.ContainsKey(date))
+            if (_knownCycles.TryGetValue(date, out Cycle value))
             {
-                //_knownCycles.Remove(date);
-                _knownCycles[date].Deleted = true;
+                value.Deleted = true;
                 await _saveSettings();
                 return true;
             }
@@ -210,7 +208,7 @@ namespace OpenNFP.Shared
             do
             {
                 string curkey = curDate.ToKey();
-                if (_knownCycles.ContainsKey(curkey) && !_knownCycles[curkey].Deleted)
+                if (_knownCycles.TryGetValue(curkey, out Cycle value) && !value.Deleted)
                 {
                     cycleDay = 1;
                     if (prevCycle != null)

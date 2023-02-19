@@ -36,8 +36,6 @@ builder.Services.AddTransient<IRemoteStorageBackend, GoogleStorageBackend>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-builder.Logging.SetMinimumLevel(LogLevel.Debug);
-
 var host = builder.Build();
 
 var chartingRepo = host.Services.GetRequiredService<IChartingRepo>();
