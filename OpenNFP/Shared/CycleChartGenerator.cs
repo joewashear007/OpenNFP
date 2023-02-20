@@ -1,8 +1,10 @@
 ﻿using OpenNFP.Shared.Interfaces;
 using OpenNFP.Shared.Models;
 using Plotly.Blazor;
+using Plotly.Blazor.Traces.Mesh3DLib;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,7 +47,24 @@ namespace OpenNFP.Shared
                 vm.Mucus.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MucusChartLabel ?? string.Empty);
                 vm.Mens.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MenstruationChartLabel ?? string.Empty);
                 vm.Coitus.Add(day.Item?.Coitus);
-                vm.Index.Add(day.Index);
+
+                string indexStr = "";
+                if (day.Item?.Coitus ?? false)
+                {
+                    indexStr += "🤍";
+                }
+                if (!string.IsNullOrEmpty(day.Item?.Notes))
+                {
+                    indexStr += "📄";
+                }
+                if(indexStr != "")
+                {
+                    indexStr = day.Index.ToString() + "<br />" + indexStr;
+                } else
+                {
+                    indexStr = day.Index.ToString();
+                }
+                vm.Index.Add(day.Index, indexStr);
             }
 
             return vm;

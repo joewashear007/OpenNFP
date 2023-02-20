@@ -263,23 +263,8 @@
             layout.Annotations.AddRange(viewModel.Mens.Annotations
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
 
-                        layout.Annotations.AddRange(viewModel.Index.Annotations
-                            .Select((q, i) =>
-                            {
-                                if ( Convert.ToBoolean(viewModel.Coitus.Values[i]))
-                                {
-                                    string icon = @"
-<br />
-💛
-";
-                                    return new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q + icon, ShowArrow = false, Font = font, };
-                                }
-                                else
-                                {
-                                    return new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font, };
-                                }
-                            }
-                        ));
+            layout.Annotations.AddRange(viewModel.Index.Annotations
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font, }));
 
             updateChart = true;
             Loading = false;
