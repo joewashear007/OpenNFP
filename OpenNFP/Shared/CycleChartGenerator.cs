@@ -26,6 +26,7 @@ namespace OpenNFP.Shared
         {
             CycleViewMode vm = new CycleViewMode();
             IAsyncEnumerable<CycleIndex<DayRecord>>? days = _chartingRepo.GetDayRecordsForCycleAsync(startDate, limit: limitDays);
+
             await foreach (CycleIndex<DayRecord>? day in days)
             {
                 if (day.Item == null)

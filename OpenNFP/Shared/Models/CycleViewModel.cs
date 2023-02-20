@@ -17,7 +17,7 @@ namespace OpenNFP.Shared.Models
         public ChartTraceData Temp { get; } = new ChartTraceData();
         public ChartTraceData Index { get; } = new ChartTraceData();
         public ChartTraceData Coitus { get; } = new ChartTraceData();
-
+        public List<double> PhaseStartDays = new List<double> { 0, 0.3, 0.6  };
 
     }
 }

@@ -114,6 +114,7 @@
         new List<object>() { 0.75, MudBlazor.Colors.Purple.Lighten2 },
         new List<object>() { 1, MudBlazor.Colors.Purple.Lighten1 },
     };
+
     private readonly Plotly.Blazor.LayoutLib.AnnotationLib.Font font = new() { Color = "white", Size = 12, Family = "symbolaregular, Symbola" };
 
 
@@ -170,17 +171,18 @@
             if (chart is not null)
             {
                 await chart.React();
+
+                if (_chartRef == null)
+                {
+                    _chartRef = DotNetObjectReference.Create(this);
+                    await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
+                }
             }
             else
             {
                 Logger.LogWarning($"Cycle Chart is Null!");
             }
 
-            if (_chartRef == null)
-            {
-                _chartRef = DotNetObjectReference.Create(this);
-                await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
-            }
         }
 
         if (!firstRenderComplete && RenderChart)
@@ -209,6 +211,18 @@
         if (Cycle != null)
         {
             CycleViewMode viewModel = await Generator.GetTracesAsync(Cycle.StartDate, LimitDays);
+            List<object> dayColorScale = new List<object>()
+            {
+                new List<object>() {0, MudBlazor.Colors.Lime.Darken3},
+                new List<object>() {viewModel.PhaseStartDays[1], MudBlazor.Colors.Lime.Darken3},
+
+                new List<object>() {viewModel.PhaseStartDays[1], MudBlazor.Colors.Green.Darken3 },
+                new List<object>() {viewModel.PhaseStartDays[2], MudBlazor.Colors.Green.Darken3 },
+                
+                new List<object>() {viewModel.PhaseStartDays[2], MudBlazor.Colors.Cyan.Darken3},
+                new List<object>() {1, MudBlazor.Colors.Cyan.Darken3},
+            };
+
 
             Scatter tempTrace = new Scatter
                 {
@@ -248,6 +262,10 @@
                     ShowScale = false,
                     XGap = 3,
                     YGap = 1,
+                    ColorScale = dayColorScale,
+                    AutoColorScale = false,
+                    ZMin = 0,
+                    ZMax = viewModel.Days.Count
                 };
 
 
@@ -262,7 +280,6 @@
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 2, Text = q, ShowArrow = false, Font = font }));
             layout.Annotations.AddRange(viewModel.Mens.Annotations
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
-
             layout.Annotations.AddRange(viewModel.Index.Annotations
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font, }));
 
