@@ -1,5 +1,6 @@
 ﻿@page "/editday/"
 @page "/editday/{date}"
+@using OpenNFP.Client.Utils;
 
 @inject IChartingRepo ChartingRepo
 @inject ILocalStorageService localStorage
@@ -126,7 +127,7 @@
     public string date { get; set; } = string.Empty;
 
     DateTime dateVal { get; set; } = DateTime.Today;
-    DayRecord? Day { get; set; } = null;
+    DayRecord Day { get; set; } = new DayRecord(DateTime.Today);
     bool success = true;
     string[] errors = { };
 
@@ -134,60 +135,29 @@
 
     MudForm form = null!;
 
-    class EnumSliderHelper<T> where T : struct, Enum
+
+
+    EnumSliderHelper<ClearBlueResult> clearblue = null!;
+    EnumSliderHelper<CervixOpening> cervixOpening = null!;
+    EnumSliderHelper<CervixTexture> cervixTexture = null!;
+    EnumSliderHelper<MenstruationFlow> flow = null!;
+    EnumSliderHelper<TestResult> pregTest = null!;
+    EnumSliderHelper<TestResult> ovulationTest = null!;
+    EnumSliderHelper<MucusSensation> mucusSensation = null!;
+    EnumSliderHelper<MucusCharacteristic> mucusCharacteristic = null!;
+    EnumSliderHelper<MenstruationFlow> menstruationFlow = null!;
+
+    protected override void OnInitialized()
     {
-        public EnumSliderHelper(Action<T> setProp)
-        {
-            this.setProp = setProp;
-        }
-        private T _value = default(T);
-        private readonly Action<T> setProp;
-
-        public string[] Labels => Enum.GetNames<T>();
-        public int Min => Enum.GetValues<T>().Cast<int>().Min();
-        public int Max => Enum.GetValues<T>().Cast<int>().Max();
-        public int ValueInt
-        {
-            get => (int)(object)_value;
-            set
-            {
-                T newValue = (T)(object)value;
-                _value = newValue;
-                setProp(newValue);
-            }
-        }
-        public T Value
-        {
-            get => _value;
-            set
-            {
-                _value = value;
-                setProp(value);
-            }
-        }
-    }
-
-    EnumSliderHelper<ClearBlueResult>? clearblue = null;
-    EnumSliderHelper<CervixOpening>? cervixOpening = null;
-    EnumSliderHelper<CervixTexture>? cervixTexture = null;
-    EnumSliderHelper<MenstruationFlow>? flow = null;
-    EnumSliderHelper<TestResult>? pregTest = null;
-    EnumSliderHelper<TestResult>? ovulationTest = null;
-    EnumSliderHelper<MucusSensation>? mucusSensation = null;
-    EnumSliderHelper<MucusCharacteristic>? mucusCharacteristic = null;
-    EnumSliderHelper<MenstruationFlow>? menstruationFlow = null;
-
-    protected override void OnParametersSet()
-    {
-        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day!.ClearBlueResult = q);
-        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day!.CervixOpening = q);
-        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day!.CervixTexture = q);
-        flow = new EnumSliderHelper<MenstruationFlow>(q => Day!.MenstruationFlow = q);
-        pregTest = new EnumSliderHelper<TestResult>(q => Day!.PregnancyTest = q);
-        ovulationTest = new EnumSliderHelper<TestResult>(q => Day!.OvulationTest = q);
-        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day!.MucusSensation = q);
-        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day!.MucusCharacteristic = q);
-        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day!.MenstruationFlow = q);
+        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
+        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
+        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day.CervixTexture = q);
+        flow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
+        pregTest = new EnumSliderHelper<TestResult>(q => Day.PregnancyTest = q);
+        ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
+        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
+        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day.MucusCharacteristic = q);
+        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -248,7 +218,7 @@
         Day = await ChartingRepo.GetDayAsync(date);
         if (Day == null)
         {
-            Day = new DayRecord() { Date = dateVal };
+            Day = new DayRecord(dateVal);
         }
         clearblue.Value = Day.ClearBlueResult;
         clearblue.Value = Day.ClearBlueResult;
