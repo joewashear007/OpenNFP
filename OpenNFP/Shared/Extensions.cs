@@ -25,6 +25,22 @@ namespace OpenNFP.Shared
             }
         }
 
+        public static string ToKey(this DateOnly date)
+        {
+            return date.ToString("yyyyMMdd");
+        }
+        public static string ToKey(this DateOnly? date)
+        {
+            if (date.HasValue)
+            {
+                return date.Value.ToString("yyyyMMdd");
+            }
+            else
+            {
+                return "";
+            }
+        }
+
         public static DateTime? ToDateTime(this string self)
         {
             if (DateTime.TryParseExact(self, "yyyyMMdd", null, DateTimeStyles.None, out DateTime vaule))

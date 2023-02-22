@@ -6,159 +6,193 @@
 @inject ILocalStorageService localStorage
 @inject NavigationManager uriHelper;
 @inject ILogger<EditDayForm> Logger;
+@inject IDialogService DialogService;
 
 <PageTitle>Edit Page: @date (Cycle Day: #)</PageTitle>
 
 <MudContainer Class="mt-16" MaxWidth="MaxWidth.Medium">
-    @if (Day is not null)
-    {
-        <MudCard>
-            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-                <MudCardContent>
-                    <MudGrid>
-                        <MudItem md="4">
-                            <MudDatePicker Label="Date" Date="@dateVal" DateChanged="@(d => ChangeDate(d))"></MudDatePicker>
-                        </MudItem>
-                        <MudItem md="4">
-                            <MudNumericField @bind-Value="@Day.Temperature"
+
+    <MudCard Class="mb-16">
+        <MudPaper Elevation="25" Outlined="true">
+            <MudCardHeader Class="pa-0">
+                <CardHeaderContent>
+                    <MudPaper Class="d-flex justify-space-around">
+                        <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" OnClick="PrevDayAsync" Disabled="@disableInput" Size="Size.Large" />
+                        <MudSpacer />
+                        <div>
+                            <MudDatePicker Date="@Model.Date" DateChanged="DateChanged" Disabled="@disableInput"></MudDatePicker>
+                            <MudText Typo="Typo.subtitle2">Cycle Day: @Model.CycleDay, Phase: @Model.CyclePhase </MudText>
+                        </div>
+                        <MudSpacer />
+                        <MudIconButton Icon="@Icons.Material.Outlined.ArrowForward" OnClick="NextDayAsync" Disabled="@disableInput" Size="Size.Large" />
+                    </MudPaper>
+                </CardHeaderContent>
+            </MudCardHeader>
+        </MudPaper>
+        <MudForm @ref="form">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem md="6">
+                        <MudNumericField Disabled="@disableInput" @bind-Value="@Model.Temperature"
                                          Label="Temperature"
                                          Step=".1M"
                                          Adornment="Adornment.End" AdornmentText="°F" Clearable=true />
-                        </MudItem>
-                        <MudItem m3="4">
-                            <MudCheckBox Class="mt-2" Label="Coitus" @bind-Checked="@Day.Coitus" Color="Color.Secondary" CheckedIcon="@Icons.Material.Filled.Favorite" UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"></MudCheckBox>
-                        </MudItem>
-                    </MudGrid>
-                    <MudGrid>
-                        <MudItem md="6">
-                            <MudField Label="Ovulation Test" Class="mb-4">
-                                <MudRadioGroup @bind-SelectedOption="@ovulationTest.ValueInt">
-                                    @foreach (var v in Enum.GetValues<TestResult>())
-                                    {
-                                        <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
-                                    }
-                                </MudRadioGroup>
-                            </MudField>
-                        </MudItem>
-                        <MudItem md="6">
-                            <MudField Label="Pregancy Test">
-                                <MudRadioGroup @bind-SelectedOption="@pregTest.ValueInt">
-                                    @foreach (var v in Enum.GetValues<TestResult>())
-                                    {
-                                        <MudRadio Option="@((int)v)">@v.ToString()</MudRadio>
-                                    }
-                                </MudRadioGroup>
-                            </MudField>
-                        </MudItem>
-                    </MudGrid>
-                </MudCardContent>
+                    </MudItem>
+                    <MudItem md="6">
+                        <MudCheckBox Class="mt-2"
+                                     Label="Coitus" Disabled="@disableInput"
+                                     @bind-Checked="@Model.Coitus"
+                                     Color="Color.Secondary"
+                                     CheckedIcon="@Icons.Material.Filled.Favorite"
+                                     UncheckedIcon="@Icons.Material.Filled.FavoriteBorder" />
+                    </MudItem>
+                    <MudItem md="6">
+                        <MudField Label="Ovulation Test" Class="mb-4">
+                            <MudRadioGroup @bind-SelectedOption="@Model.OvulationTest.ValueInt">
+                                @foreach (var v in Enum.GetValues<TestResult>())
+                                {
+                                    <MudRadio Option="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
+                                }
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+                    <MudItem md="6">
+                        <MudField Label="Pregancy Test">
+                            <MudRadioGroup @bind-SelectedOption="@Model.PregnancyTest.ValueInt">
+                                @foreach (var v in Enum.GetValues<TestResult>())
+                                {
+                                    <MudRadio Option="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
+                                }
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+                </MudGrid>
 
-                <MudCardContent Class="pa-0">
-                    <MudSlider TickMarks="true" TickMarkLabels="@clearblue.Labels"
-                           Step="1"
-                           Min="@clearblue.Min"
-                           Max="@clearblue.Max"
-                           @bind-Value="@clearblue.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.Clearblue.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.Clearblue.Min"
+                           Max="@Model.Clearblue.Max"
+                           @bind-Value="@Model.Clearblue.ValueInt"
                            Class="mb-4 pl-8 pr-8">ClearBlue Monitor Value</MudSlider>
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@cervixTexture.Labels"
-                           Step="1"
-                           Min="@cervixTexture.Min"
-                           Max="@cervixTexture.Max"
-                           @bind-Value="@cervixTexture.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.CervixTexture.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.CervixTexture.Min"
+                           Max="@Model.CervixTexture.Max"
+                           @bind-Value="@Model.CervixTexture.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Firmness</MudSlider>
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@cervixOpening.Labels"
-                           Step="1"
-                           Min="@cervixOpening.Min"
-                           Max="@cervixOpening.Max"
-                           @bind-Value="@cervixOpening.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.CervixOpening.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.CervixOpening.Min"
+                           Max="@Model.CervixOpening.Max"
+                           @bind-Value="@Model.CervixOpening.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Openness</MudSlider>
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@mucusCharacteristic.Labels"
-                           Step="1"
-                           Min="@mucusCharacteristic.Min"
-                           Max="@mucusCharacteristic.Max"
-                           @bind-Value="@mucusCharacteristic.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.MucusCharacteristic.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.MucusCharacteristic.Min"
+                           Max="@Model.MucusCharacteristic.Max"
+                           @bind-Value="@Model.MucusCharacteristic.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Characteristic</MudSlider>
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@mucusSensation.Labels"
-                           Step="1"
-                           Min="@mucusSensation.Min"
-                           Max="@mucusSensation.Max"
-                           @bind-Value="@mucusSensation.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.MucusSensation.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.MucusSensation.Min"
+                           Max="@Model.MucusSensation.Max"
+                           @bind-Value="@Model.MucusSensation.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Sensation</MudSlider>
 
-                    <MudSlider TickMarks="true" TickMarkLabels="@menstruationFlow.Labels"
-                           Step="1"
-                           Min="@menstruationFlow.Min"
-                           Max="@menstruationFlow.Max"
-                           @bind-Value="@menstruationFlow.ValueInt"
+                <MudSlider TickMarks="true" TickMarkLabels="@Model.MenstruationFlow.Labels"
+                           Step="1" Disabled="@disableInput"
+                           Min="@Model.MenstruationFlow.Min"
+                           Max="@Model.MenstruationFlow.Max"
+                           @bind-Value="@Model.MenstruationFlow.ValueInt"
                            Class="mb-4 pl-8 pr-8">Menstration</MudSlider>
 
-                </MudCardContent>
+            </MudCardContent>
 
-                <MudCardContent Class=" mt-8">
-                    <MudTextField Label="Notes" @bind-Value="@Day.Notes" Lines="5" Variant="Variant.Outlined" />
-                </MudCardContent>
+            <MudCardContent Class=" mt-8">
+                <MudTextField Label="Notes" @bind-Value="@Model.Notes" Lines="5" Variant="Variant.Outlined" Disabled="@disableInput" />
+            </MudCardContent>
 
-                <MudCardContent Class=" mt-8">
-                    <MudCheckBox @bind-Checked="@startCycle" Label="This Day Should Start a Cycle"></MudCheckBox>
-                </MudCardContent>
+            <MudCardContent Class=" mt-8">
+                <MudCheckBox @bind-Checked="@Model.StartCycle" Label="This Day Should Start a Cycle" Disabled="@disableInput"></MudCheckBox>
+            </MudCardContent>
 
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" FullWidth="true" OnClick="Save">Save</MudButton>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" FullWidth="true" OnClick="Save" Disabled="@disableInput">Save</MudButton>
 
-                </MudCardActions>
-                <MudCardContent Class=" mt-8">
-                    <MudText>Last Modified on @Day.ModifiedOn.ToLocalTime().ToString("g")</MudText>
-                </MudCardContent>
-            </MudForm>
-        </MudCard>
-    }
-    else
-    {
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" />
-    }
+            </MudCardActions>
+            <MudCardContent Class="mt-8">
+                <MudText Style="font-style:italic" Align="Align.Right">Last Modified on @Model.ModifiedOn.ToLocalTime().ToString("g")</MudText>
+            </MudCardContent>
+        </MudForm>
+    </MudCard>
 </MudContainer>
 
 @code {
     [Parameter]
     public string date { get; set; } = string.Empty;
 
-    DateTime dateVal { get; set; } = DateTime.Today;
-    DayRecord Day { get; set; } = new DayRecord(DateTime.Today);
-    bool success = true;
-    string[] errors = { };
-
-    private bool startCycle { get; set; } = false;
-
+    bool disableInput = true;
+    EditDayViewModel Model = null!;
     MudForm form = null!;
 
 
-
-    EnumSliderHelper<ClearBlueResult> clearblue = null!;
-    EnumSliderHelper<CervixOpening> cervixOpening = null!;
-    EnumSliderHelper<CervixTexture> cervixTexture = null!;
-    EnumSliderHelper<MenstruationFlow> flow = null!;
-    EnumSliderHelper<TestResult> pregTest = null!;
-    EnumSliderHelper<TestResult> ovulationTest = null!;
-    EnumSliderHelper<MucusSensation> mucusSensation = null!;
-    EnumSliderHelper<MucusCharacteristic> mucusCharacteristic = null!;
-    EnumSliderHelper<MenstruationFlow> menstruationFlow = null!;
+    string[] errors = { };
 
     protected override void OnInitialized()
     {
-        clearblue = new EnumSliderHelper<ClearBlueResult>(q => Day.ClearBlueResult = q);
-        cervixOpening = new EnumSliderHelper<CervixOpening>(q => Day.CervixOpening = q);
-        cervixTexture = new EnumSliderHelper<CervixTexture>(q => Day.CervixTexture = q);
-        flow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
-        pregTest = new EnumSliderHelper<TestResult>(q => Day.PregnancyTest = q);
-        ovulationTest = new EnumSliderHelper<TestResult>(q => Day.OvulationTest = q);
-        mucusSensation = new EnumSliderHelper<MucusSensation>(q => Day.MucusSensation = q);
-        mucusCharacteristic = new EnumSliderHelper<MucusCharacteristic>(q => Day.MucusCharacteristic = q);
-        menstruationFlow = new EnumSliderHelper<MenstruationFlow>(q => Day.MenstruationFlow = q);
+        Model = new EditDayViewModel(ChartingRepo);
     }
+
+
+    private async Task NextDayAsync()
+    {
+        await DateChanged(Model.Date.AddDays(1));
+    }
+    private async Task PrevDayAsync()
+    {
+        await DateChanged(Model.Date.AddDays(-1));
+    }
+
+    private async Task DateChanged(DateTime? dateTime)
+    {
+        if (form.IsTouched)
+        {
+            bool? result = await DialogService.ShowMessageBox("Unsaved Edits",
+                "You are navigating away without saving your changes", yesText: "Save and Go!", cancelText: "Cancel", noText: "Discard Changes");
+            if (result.HasValue)
+            {
+                if (result.Value)
+                {
+                    await Save();
+                }
+                else
+                {
+                    // discard chanages - let the page change happen
+                    form.Reset();
+                }
+            }
+            else
+            {
+                // stop the navigataion
+                return;
+            }
+        }
+
+        disableInput = true;
+        await Task.Delay(100);
+        if (dateTime.HasValue)
+        {
+            await Model.LoadDayRecordAsync(dateTime.Value);
+            disableInput = false;
+            StateHasChanged();
+        }
+
+    }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -167,70 +201,24 @@
             if (string.IsNullOrEmpty(date))
             {
                 date = DateTime.Today.ToKey();
-                dateVal = DateTime.Today;
             }
-            else
-            {
-                dateVal = date.ToDateTime().GetValueOrDefault();
-            }
-            await ChangeDate(dateVal);
+            await DateChanged(date.ToDateTime());
         }
     }
 
     private async Task Save()
     {
-        if (Day != null)
+        await form.Validate();
+        if (form.IsValid)
         {
-            Day.ClearBlueResult = clearblue.Value;
-            Day.ClearBlueResult = clearblue.Value;
-            Day.CervixOpening = cervixOpening.Value;
-            Day.CervixTexture = cervixTexture.Value;
-            Day.MenstruationFlow = flow.Value;
-            Day.PregnancyTest = pregTest.Value;
-            Day.OvulationTest = ovulationTest.Value;
-            Day.MucusSensation = mucusSensation.Value;
-            Day.MucusCharacteristic = mucusCharacteristic.Value;
-            Day.MenstruationFlow = menstruationFlow.Value;
-            await form.Validate();
-            if (form.IsValid)
+            bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(date);
+            Logger.LogInformation($"Saving {date} - State Cycle: {Model.StartCycle} [already start: {isAlreadyCycleStart}]");
+            if (!Model.StartCycle && isAlreadyCycleStart)
             {
-                bool isAlreadyCycleStart = ChartingRepo.IsCycleStart(Day.IndexKey);
-                Logger.LogInformation($"Saving Day {Day.Date} - State Cycle: {startCycle}");
-                if (!startCycle && isAlreadyCycleStart)
-                {
-                    await ChartingRepo.DeleteCycleAsync(Day.IndexKey);
-                }
-                await ChartingRepo.AddUpdateRecord(Day, startCycle);
-                uriHelper.NavigateTo(uriHelper.BaseUri);
+                await ChartingRepo.DeleteCycleAsync(date);
             }
+            await Model.SaveDayRecord();
+            uriHelper.NavigateTo(uriHelper.BaseUri);
         }
-        else
-        {
-            Logger.LogInformation("Error - Day is null");
-        }
-    }
-
-    private async Task ChangeDate(DateTime? d)
-    {
-        Logger.LogInformation($"Changeing Date: {d}");
-        dateVal = d.GetValueOrDefault();
-        date = dateVal.ToKey();
-        Day = await ChartingRepo.GetDayAsync(date);
-        if (Day == null)
-        {
-            Day = new DayRecord(dateVal);
-        }
-        clearblue.Value = Day.ClearBlueResult;
-        clearblue.Value = Day.ClearBlueResult;
-        cervixOpening.Value = Day.CervixOpening;
-        cervixTexture.Value = Day.CervixTexture;
-        flow.Value = Day.MenstruationFlow;
-        pregTest.Value = Day.PregnancyTest;
-        ovulationTest.Value = Day.OvulationTest;
-        mucusSensation.Value = Day.MucusSensation;
-        mucusCharacteristic.Value = Day.MucusCharacteristic;
-        menstruationFlow.Value = Day.MenstruationFlow;
-        startCycle = ChartingRepo.GetCycleDay(date) == 1;
-        StateHasChanged();
     }
 }

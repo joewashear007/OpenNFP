@@ -155,16 +155,16 @@ namespace OpenNFP.Shared.Models
                 switch (CervixOpening)
                 {
                     case CervixOpening.Unknown: label += " "; break;
-                    case CervixOpening.Closed: label += "."; break;
-                    case CervixOpening.Partial: label += "o"; break;
-                    case CervixOpening.Open: label += "O"; break;
+                    case CervixOpening.Closed: label += "●"; break;
+                    case CervixOpening.Partial: label += "○"; break;
+                    case CervixOpening.Open: label += "◯"; break;
                 }
                 label += "/";
                 switch (CervixTexture)
                 {
                     case CervixTexture.Unknown: label += " "; break;
-                    case CervixTexture.Firm: label += "f"; break;
-                    case CervixTexture.Soft: label += "s"; break;
+                    case CervixTexture.Firm: label += "F"; break;
+                    case CervixTexture.Soft: label += "S"; break;
                 }
                 return label;
             }
@@ -182,9 +182,9 @@ namespace OpenNFP.Shared.Models
                 switch (MenstruationFlow)
                 {
                     case MenstruationFlow.Unknown: label += " "; break;
-                    case MenstruationFlow.Spotting: label += "."; break;
-                    case MenstruationFlow.Light: label += "/"; break;
-                    case MenstruationFlow.Heavy: label += "X"; break;
+                    case MenstruationFlow.Spotting: label += "●"; break;
+                    case MenstruationFlow.Light: label += "╱"; break;
+                    case MenstruationFlow.Heavy: label += "╳"; break;
                 }
                 return label;
             }

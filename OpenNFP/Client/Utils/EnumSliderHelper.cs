@@ -6,8 +6,13 @@
         {
             this.setProp = setProp;
         }
+        public EnumSliderHelper()
+        {
+            this.setProp = null;
+        }
+
         private T _value = default;
-        private readonly Action<T> setProp;
+        private readonly Action<T>? setProp;
 
         public string[] Labels => Enum.GetNames<T>();
         public int Min => Enum.GetValues<T>().Cast<int>().Min();
@@ -19,7 +24,7 @@
             {
                 T newValue = (T)(object)value;
                 _value = newValue;
-                setProp(newValue);
+                setProp?.Invoke(newValue);
             }
         }
         public T Value
@@ -28,7 +33,7 @@
             set
             {
                 _value = value;
-                setProp(value);
+                setProp?.Invoke(value);
             }
         }
     }
