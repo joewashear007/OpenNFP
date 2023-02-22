@@ -125,21 +125,24 @@ namespace OpenNFP.Shared.Models
                 string label = "";
                 switch (MucusSensation)
                 {
-                    case MucusSensation.Unknown: label += " "; break;
+                    case MucusSensation.Unknown: break;
                     case MucusSensation.None: label += "d"; break;
                     case MucusSensation.Most: label += "m"; break;
                     case MucusSensation.Watery: label += "w"; break;
                     case MucusSensation.Slippery: label += "sl "; break;
                 }
-                label += "/";
+                if (MucusSensation != MucusSensation.Unknown && MucusCharacteristic != MucusCharacteristic.Unknown)
+                {
+                    label += "/";
+                }
                 switch (MucusCharacteristic)
                 {
-                    case MucusCharacteristic.Unknown: label += " "; break;
+                    case MucusCharacteristic.Unknown: break;
                     case MucusCharacteristic.None: label += "n"; break;
                     case MucusCharacteristic.Tacky: label += "t"; break;
                     case MucusCharacteristic.Strechy: label += "s"; break;
                 }
-                return label;
+                return label.Trim();
             }
         }
 
@@ -154,15 +157,18 @@ namespace OpenNFP.Shared.Models
                 string label = "";
                 switch (CervixOpening)
                 {
-                    case CervixOpening.Unknown: label += " "; break;
+                    case CervixOpening.Unknown: break;
                     case CervixOpening.Closed: label += "●"; break;
                     case CervixOpening.Partial: label += "○"; break;
                     case CervixOpening.Open: label += "◯"; break;
                 }
-                label += "/";
+                if (CervixOpening != CervixOpening.Unknown && CervixTexture != CervixTexture.Unknown)
+                {
+                    label += "/";
+                }
                 switch (CervixTexture)
                 {
-                    case CervixTexture.Unknown: label += " "; break;
+                    case CervixTexture.Unknown: break;
                     case CervixTexture.Firm: label += "F"; break;
                     case CervixTexture.Soft: label += "S"; break;
                 }
@@ -181,7 +187,7 @@ namespace OpenNFP.Shared.Models
                 string label = "";
                 switch (MenstruationFlow)
                 {
-                    case MenstruationFlow.Unknown: label += " "; break;
+                    case MenstruationFlow.Unknown: break;
                     case MenstruationFlow.Spotting: label += "●"; break;
                     case MenstruationFlow.Light: label += "╱"; break;
                     case MenstruationFlow.Heavy: label += "╳"; break;
@@ -190,6 +196,22 @@ namespace OpenNFP.Shared.Models
             }
         }
 
+        [JsonIgnore]
+        public string MonitorChartLabel
+        {
+            get
+            {
+                string label = "";
+                switch (ClearBlueResult)
+                {
+                    case ClearBlueResult.Unknown: break;
+                    case ClearBlueResult.Low: label += "L"; break;
+                    case ClearBlueResult.High: label += "H"; break;
+                    case ClearBlueResult.Peak: label += "P"; break;
+                }
+                return label;
+            }
+        }
 
         public bool IsEmpty()
         {

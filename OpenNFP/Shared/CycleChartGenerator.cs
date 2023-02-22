@@ -33,39 +33,48 @@ namespace OpenNFP.Shared
                 {
                     throw new InvalidOperationException("Day is null");
                 }
-
-                vm.Days.Add(day.Item.Date.ToString("yyyy-MM-dd"));
-                if (day.Item.Temperature > 90)
-                {
-                    vm.Temp.Add(day.Item.Temperature);
-                }
                 else
                 {
-                    vm.Temp.Add(null, "");
-                }
-                vm.Monitor.Add((int)(day.Item?.ClearBlueResult ?? ClearBlueResult.Unknown), (day.Item?.ClearBlueResult ?? ClearBlueResult.Unknown).ToString()[..1]);
-                vm.Cervix.Add(day.Item?.CervixChartValue ?? 0, day.Item?.CervixChartLabel ?? string.Empty);
-                vm.Mucus.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MucusChartLabel ?? string.Empty);
-                vm.Mens.Add(day.Item?.MucusChartValue ?? 0, day.Item?.MenstruationChartLabel ?? string.Empty);
-                vm.Coitus.Add(day.Item?.Coitus);
 
-                string indexStr = "";
-                if (day.Item?.Coitus ?? false)
-                {
-                    indexStr += "🤍";
+                    vm.Days.Add(day.Item.Date.ToString("yyyy-MM-dd"));
+                    if (day.Item.Temperature > 90)
+                    {
+                        vm.Temp.Add(day.Item.Temperature);
+                    }
+                    else
+                    {
+                        vm.Temp.Add(null, "");
+                    }
+                    vm.Monitor.Add(day.Item.ClearBlueResult.ToChartValue(), day.Item.ClearBlueResult.ToChartLabel());
+
+                    var cervixInfo = EnumMapper.CombineCervixValue(day.Item.CervixOpening, day.Item.CervixTexture);
+                    vm.Cervix.Add(cervixInfo.value, cervixInfo.label);
+
+                    var mucusInfo = EnumMapper.CombineMucusValue(day.Item.MucusSensation, day.Item.MucusCharacteristic);
+                    vm.Mucus.Add(mucusInfo.value, mucusInfo.label);
+
+                    vm.Mens.Add(day.Item.MenstruationFlow.ToChartValue(), day.Item.MenstruationFlow.ToChartLabel());
+                    vm.Coitus.Add(day.Item?.Coitus);
+
+                    string indexStr = "";
+                    if (day.Item?.Coitus ?? false)
+                    {
+                        indexStr += "🤍";
+                    }
+                    if (!string.IsNullOrEmpty(day.Item?.Notes))
+                    {
+                        indexStr += "📄";
+                    }
+                    if (indexStr != "")
+                    {
+                        indexStr = day.Index.ToString() + "<br />" + indexStr;
+                    }
+                    else
+                    {
+                        indexStr = day.Index.ToString();
+                    }
+                    vm.Index.Add(day.Index, indexStr);
                 }
-                if (!string.IsNullOrEmpty(day.Item?.Notes))
-                {
-                    indexStr += "📄";
-                }
-                if(indexStr != "")
-                {
-                    indexStr = day.Index.ToString() + "<br />" + indexStr;
-                } else
-                {
-                    indexStr = day.Index.ToString();
-                }
-                vm.Index.Add(day.Index, indexStr);
             }
 
             return vm;

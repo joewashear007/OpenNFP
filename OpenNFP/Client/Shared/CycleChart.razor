@@ -108,11 +108,34 @@
         };
     private readonly List<object> colorScale = new List<object>()
     {
-        new List<object>() {0.0 , MudBlazor.Colors.Purple.Lighten5    },
-        new List<object>() {0.25 , MudBlazor.Colors.Purple.Lighten4},
-        new List<object>() { 0.5, MudBlazor.Colors.Purple.Lighten3 },
-        new List<object>() { 0.75, MudBlazor.Colors.Purple.Lighten2 },
-        new List<object>() { 1, MudBlazor.Colors.Purple.Lighten1 },
+        new List<object>() {0.0 , MudBlazor.Colors.DeepPurple.Lighten5 },
+        new List<object>() {0.1 , MudBlazor.Colors.DeepPurple.Lighten5 },
+
+        new List<object>() {0.1 , MudBlazor.Colors.DeepPurple.Lighten2 },
+        new List<object>() {0.3 , MudBlazor.Colors.DeepPurple.Lighten2 },
+
+        new List<object>() { 0.3, MudBlazor.Colors.DeepPurple.Darken1 },
+        new List<object>() { 0.6, MudBlazor.Colors.DeepPurple.Darken1 },
+
+        new List<object>() { 0.6, MudBlazor.Colors.DeepPurple.Darken3 },
+        new List<object>() { 1.0, MudBlazor.Colors.DeepPurple.Darken3 },
+
+    };
+
+    private readonly List<object> mensColorScale = new List<object>()
+    {
+        new List<object>() {0.0 , MudBlazor.Colors.Teal.Lighten5 },
+        new List<object>() {0.1 , MudBlazor.Colors.Teal.Lighten5 },
+
+        new List<object>() {0.1 , MudBlazor.Colors.Teal.Lighten2 },
+        new List<object>() {0.3 , MudBlazor.Colors.Teal.Lighten2 },
+
+        new List<object>() { 0.3, MudBlazor.Colors.Teal.Darken1 },
+        new List<object>() { 0.6, MudBlazor.Colors.Teal.Darken1 },
+
+        new List<object>() { 0.6, MudBlazor.Colors.Teal.Darken3 },
+        new List<object>() { 1.0, MudBlazor.Colors.Teal.Darken3 },
+
     };
 
     private readonly Plotly.Blazor.LayoutLib.AnnotationLib.Font font = new() { Color = "white", Size = 12, Family = "symbolaregular, Symbola" };
@@ -130,7 +153,13 @@
             },
             new()
             {
-                Domain = new List<object>() {0.30, 0.80},
+                Domain = new List<object>() {0.30, 0.65},
+                GridWidth  =1,
+
+            },
+            new()
+            {
+                Domain = new List<object>() {0.675, 0.80},
                 GridWidth  =1,
 
             },
@@ -218,10 +247,11 @@
 
                 new List<object>() {viewModel.PhaseStartDays[1], MudBlazor.Colors.Green.Darken3 },
                 new List<object>() {viewModel.PhaseStartDays[2], MudBlazor.Colors.Green.Darken3 },
-                
+
                 new List<object>() {viewModel.PhaseStartDays[2], MudBlazor.Colors.Cyan.Darken3},
                 new List<object>() {1, MudBlazor.Colors.Cyan.Darken3},
             };
+
 
 
             Scatter tempTrace = new Scatter
@@ -236,12 +266,11 @@
             HeatMap hm = new HeatMap()
                 {
                     X = viewModel.Days,
-                    Y = new List<object>() { "Monitor", "Cervix", "Mucus", "Mens" },
+                    Y = new List<object>() { "Monitor", "Cervix", "Mucus" },
                     Z = new List<object>() {
                             viewModel.Monitor.Values,
                             viewModel.Cervix.Values,
                             viewModel.Mucus.Values,
-                            viewModel.Mens.Values,
                         },
                     ShowLegend = false,
                     YAxis = "y2",
@@ -249,6 +278,20 @@
                     XGap = 3,
                     YGap = 1,
                     ColorScale = colorScale
+                };
+            HeatMap mensHm = new HeatMap()
+                {
+                    X = viewModel.Days,
+                    Y = new List<object>() { "Mens" },
+                    Z = new List<object>() {
+                            viewModel.Mens.Values,
+                        },
+                    ShowLegend = false,
+                    YAxis = "y3",
+                    ShowScale = false,
+                    XGap = 3,
+                    YGap = 1,
+                    ColorScale = mensColorScale
                 };
             HeatMap hmDate = new HeatMap()
                 {
@@ -258,7 +301,7 @@
                             viewModel.Index.Values
                         },
                     ShowLegend = false,
-                    YAxis = "y3",
+                    YAxis = "y4",
                     ShowScale = false,
                     XGap = 3,
                     YGap = 1,
@@ -271,6 +314,7 @@
 
             data.Add(tempTrace);
             data.Add(hm);
+            data.Add(mensHm);
             data.Add(hmDate);
             layout.Annotations.AddRange(viewModel.Monitor.Annotations
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
@@ -279,9 +323,9 @@
             layout.Annotations.AddRange(viewModel.Mucus.Annotations
                 .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 2, Text = q, ShowArrow = false, Font = font }));
             layout.Annotations.AddRange(viewModel.Mens.Annotations
-                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y2", X = viewModel.Days[i], Y = 3, Text = q, ShowArrow = false, Font = font }));
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font }));
             layout.Annotations.AddRange(viewModel.Index.Annotations
-                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y3", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font, }));
+                .Select((q, i) => new Annotation() { XRef = "x1", YRef = "y4", X = viewModel.Days[i], Y = 0, Text = q, ShowArrow = false, Font = font, }));
 
             updateChart = true;
             Loading = false;
