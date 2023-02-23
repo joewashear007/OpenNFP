@@ -149,17 +149,17 @@
             new()
             {
                 Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Temp" },
-                Domain = new List<object>() {0M, 0.25}
+                Domain = new List<object>() {0M, 0.39}
             },
             new()
             {
-                Domain = new List<object>() {0.30, 0.65},
+                Domain = new List<object>() {0.40, 0.69},
                 GridWidth  =1,
 
             },
             new()
             {
-                Domain = new List<object>() {0.675, 0.80},
+                Domain = new List<object>() {0.7, 0.80},
                 GridWidth  =1,
 
             },
@@ -261,6 +261,8 @@
                     Y = viewModel.Temp.Values,
                     YAxis = "y",
                     ShowLegend = false,
+                    Name = "Temperature",
+                    
                 };
 
             HeatMap hm = new HeatMap()
@@ -277,7 +279,10 @@
                     ShowScale = false,
                     XGap = 3,
                     YGap = 1,
-                    ColorScale = colorScale
+                    ColorScale = colorScale,
+                        ZMin = 0,
+                    ZMax = 1,
+                    Name = "Fertility"
                 };
             HeatMap mensHm = new HeatMap()
                 {
@@ -291,7 +296,10 @@
                     ShowScale = false,
                     XGap = 3,
                     YGap = 1,
-                    ColorScale = mensColorScale
+                    ColorScale = mensColorScale,
+                    ZMin = 0,
+                    ZMax = 1,
+                    Name = "Menstration"
                 };
             HeatMap hmDate = new HeatMap()
                 {
