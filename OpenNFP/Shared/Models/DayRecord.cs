@@ -17,6 +17,7 @@ namespace OpenNFP.Shared.Models
         private MucusCharacteristic _mucusCharacteristic = MucusCharacteristic.Unknown;
         private MenstruationFlow _menstruationFlow = MenstruationFlow.Unknown;
         private string _notes = "";
+        private bool _admormalTemperature = false;
 
         public DayRecord()
         {
@@ -111,107 +112,14 @@ namespace OpenNFP.Shared.Models
             set { if (value != _notes) { _notes = value; ModifiedOn = DateTime.UtcNow; } }
         }
 
+        public bool AdmormalTemperature
+        {
+            get => _admormalTemperature;
+            set { if (value != _admormalTemperature) { _admormalTemperature = value; ModifiedOn = DateTime.UtcNow; } }
+        }
+
         [JsonIgnore]
         public string IndexKey => _date.ToKey();
-
-        [JsonIgnore]
-        public int MucusChartValue => Math.Max((int)MucusCharacteristic, (int)MucusSensation);
-
-        [JsonIgnore]
-        public string MucusChartLabel
-        {
-            get
-            {
-                string label = "";
-                switch (MucusSensation)
-                {
-                    case MucusSensation.Unknown: break;
-                    case MucusSensation.None: label += "d"; break;
-                    case MucusSensation.Most: label += "m"; break;
-                    case MucusSensation.Watery: label += "w"; break;
-                    case MucusSensation.Slippery: label += "sl "; break;
-                }
-                if (MucusSensation != MucusSensation.Unknown && MucusCharacteristic != MucusCharacteristic.Unknown)
-                {
-                    label += "/";
-                }
-                switch (MucusCharacteristic)
-                {
-                    case MucusCharacteristic.Unknown: break;
-                    case MucusCharacteristic.None: label += "n"; break;
-                    case MucusCharacteristic.Tacky: label += "t"; break;
-                    case MucusCharacteristic.Strechy: label += "s"; break;
-                }
-                return label.Trim();
-            }
-        }
-
-        [JsonIgnore]
-        public int CervixChartValue => Math.Max((int)CervixOpening, (int)CervixTexture);
-
-        [JsonIgnore]
-        public string CervixChartLabel
-        {
-            get
-            {
-                string label = "";
-                switch (CervixOpening)
-                {
-                    case CervixOpening.Unknown: break;
-                    case CervixOpening.Closed: label += "●"; break;
-                    case CervixOpening.Partial: label += "○"; break;
-                    case CervixOpening.Open: label += "◯"; break;
-                }
-                if (CervixOpening != CervixOpening.Unknown && CervixTexture != CervixTexture.Unknown)
-                {
-                    label += "/";
-                }
-                switch (CervixTexture)
-                {
-                    case CervixTexture.Unknown: break;
-                    case CervixTexture.Firm: label += "F"; break;
-                    case CervixTexture.Soft: label += "S"; break;
-                }
-                return label;
-            }
-        }
-
-        [JsonIgnore]
-        public int MenstruationChartValue => (int)MenstruationFlow;
-
-        [JsonIgnore]
-        public string MenstruationChartLabel
-        {
-            get
-            {
-                string label = "";
-                switch (MenstruationFlow)
-                {
-                    case MenstruationFlow.Unknown: break;
-                    case MenstruationFlow.Spotting: label += "●"; break;
-                    case MenstruationFlow.Light: label += "╱"; break;
-                    case MenstruationFlow.Heavy: label += "╳"; break;
-                }
-                return label;
-            }
-        }
-
-        [JsonIgnore]
-        public string MonitorChartLabel
-        {
-            get
-            {
-                string label = "";
-                switch (ClearBlueResult)
-                {
-                    case ClearBlueResult.Unknown: break;
-                    case ClearBlueResult.Low: label += "L"; break;
-                    case ClearBlueResult.High: label += "H"; break;
-                    case ClearBlueResult.Peak: label += "P"; break;
-                }
-                return label;
-            }
-        }
 
         public bool IsEmpty()
         {

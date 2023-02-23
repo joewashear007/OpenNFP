@@ -17,7 +17,7 @@ namespace OpenNFP.Client.Utils
         public string DateKey { get; private set; } = DateTime.Today.ToKey();
         public int CycleDay { get; private set; } = 1;
         public int CyclePhase { get; private set; } = 1;
-
+        public bool AdmormalTemperature { get; set; } = false;
         public decimal? Temperature { get; set; } = null;
         public bool Coitus { get; set; } = false;
 
@@ -47,6 +47,7 @@ namespace OpenNFP.Client.Utils
             CycleDay = ChartingRepo.GetCycleDay(DateKey);
 
             Temperature = day.Temperature;
+            AdmormalTemperature = day.AdmormalTemperature;
             Coitus = day.Coitus;
             Clearblue.Value = day.ClearBlueResult;
             CervixOpening.Value = day.CervixOpening;
@@ -78,6 +79,7 @@ namespace OpenNFP.Client.Utils
             day.MenstruationFlow = MenstruationFlow.Value;
             day.Notes = Notes;
             day.Temperature = Temperature;
+            day.AdmormalTemperature = AdmormalTemperature;
             day.Coitus = Coitus;
 
             await ChartingRepo.AddUpdateRecord(day, StartCycle);

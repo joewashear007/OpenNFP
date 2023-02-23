@@ -38,7 +38,12 @@
                                          Step=".1M"
                                          Adornment="Adornment.End" AdornmentText="°F" Clearable=true />
                     </MudItem>
-                    <MudItem md="6">
+                    <MudItem md="3">
+                        <MudCheckBox Class="mt-2"
+                                     Label="Adnormal Temp" Disabled="@disableInput"
+                                     @bind-Checked="@Model.AdmormalTemperature" />
+                    </MudItem>
+                    <MudItem md="3">
                         <MudCheckBox Class="mt-2"
                                      Label="Coitus" Disabled="@disableInput"
                                      @bind-Checked="@Model.Coitus"
