@@ -15,23 +15,17 @@
 
 
 <MudCard>
-    <MudCardHeader>
-        <MudChip Label="true">Cycle @CycleIndex</MudChip>
-        <MudChip Label="true">
-            @Cycle.Length Days
-            @if (LimitDays && Cycle.Length > 40)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.WarningAmber" />
-            }
-        </MudChip>
-        <MudText Align="Align.Center" Typo="Typo.subtitle1"></MudText>
-        <MudText Typo="Typo.h6" Align="Align.Center">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----")</MudText>
-            @if (LimitDays)
-        {
-            <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith"></MudIconButton>
-        }
-    </MudCardHeader>
-    <MudCardContent Class="p-0">
+        <MudCardContent Class="p-0 relative"> 
+        <MudPaper Class="absolute z-50" Elevation="4" Outlined="true" Style="@("top:0px; right: 0px; background-color: " + MudBlazor.Colors.Grey.Lighten3)">
+                <MudToolBar Dense=true >
+                    @if (LimitDays)
+                    {
+                        <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith" Size="Size.Small"></MudIconButton>
+                    } else {
+                        <MudIconButton Icon="@Icons.Material.Outlined.Download" Color="Color.Inherit" Class="mr-5" OnClick="DownloadChartImageAsync" Size="Size.Small" />
+                    }
+                </MudToolBar>
+            </MudPaper>
 
         @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
         {
@@ -41,7 +35,7 @@
                     <MudButton OnClick="() => MergeCycle(below:false)">Merge With Above Cycle</MudButton>
                     <MudButton OnClick="() => MergeCycle(below:true)">Merge with Below Cycle</MudButton>
                 </MudButtonGroup>
-            </MudAlert>
+              </MudAlert>
         }
         @if (Loading)
         {
@@ -65,8 +59,11 @@
         }
 
         @if (!RenderChart)
-        {
-            <MudButton OnClick="() => RenderChart = true">Load Chart</MudButton>
+        {   
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="d-inline">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----")</MudText>
+            <MudChip Label="true">Cycle @CycleIndex</MudChip>
+            <MudChip Label="true">@Cycle.Length Days</MudChip>
+            <MudButton OnClick="() => RenderChart = true" Variant="Variant.Outlined">Load Chart</MudButton>
         }
     </MudCardContent>
 </MudCard>
@@ -149,23 +146,23 @@
             new()
             {
                 Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Temp" },
-                Domain = new List<object>() {0M, 0.39}
+                Domain = new List<object>() {0M, 0.35}
             },
             new()
             {
-                Domain = new List<object>() {0.40, 0.69},
+                Domain = new List<object>() {0.36, 0.65},
                 GridWidth  =1,
 
             },
             new()
             {
-                Domain = new List<object>() {0.7, 0.80},
+                Domain = new List<object>() {0.66, 0.75},
                 GridWidth  =1,
 
             },
             new()
             {
-                Domain = new List<object>() {0.85, 1},
+                Domain = new List<object>() {0.76, 0.90},
                 GridWidth  =1,
 
             }
@@ -232,6 +229,46 @@
         layout.Width = maxCycleLength * 50;
         layout.XAxis[0].Range = new List<object> { Cycle.StartDate.AddHours(-12).ToString("yyyy-MM-dd"), Cycle.StartDate.AddDays(maxCycleLength).ToString("yyyy-MM-dd"), };
         layout.XAxis[0].Tick0 = Cycle.StartDate.ToString("yyyy-MM-dd");
+        layout.Title = new Title()
+            {
+                Text = $"<span style='font-weight:500'>{Cycle?.StartDate.ToString("MMM dd yyyy")}</span>",
+                Font = new Plotly.Blazor.LayoutLib.TitleLib.Font() { Family = "Roboto, Helvetica, Arial, sans-serif", Size = 20 },
+                Y = 1M,
+                X = 0M,
+                Pad = new Plotly.Blazor.LayoutLib.TitleLib.Pad() { T = 10 }
+            };
+        layout.Annotations.Add(new Annotation
+            {
+                Text = "Cycle " + CycleIndex,
+                Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font { Size = 14, Color = "rgb(66, 66, 66)", Family = "Roboto, Helvetica, Arial, sans-serif" },
+                BgColor = "rgba(0,0,0,0.118)",
+                BorderColor = "rgb(66, 66, 66)",
+                BorderWidth = 0,
+                BorderPad = 8,
+                ShowArrow = false,
+                Align = AlignEnum.Center,
+                X = 0,
+                XShift = 85,
+                Y = 1,
+                XRef = "paper",
+                YRef = "paper",
+            });
+        layout.Annotations.Add(new Annotation
+            {
+                Text = Cycle.Length.ToString() + " Days",
+                Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font { Size = 14, Color = "rgb(66, 66, 66)", Family = "Roboto, Helvetica, Arial, sans-serif" },
+                BgColor = "rgba(0,0,0,0.118)",
+                BorderColor = "rgb(66, 66, 66)",
+                BorderWidth = 0,
+                BorderPad = 8,
+                ShowArrow = false,
+                Align = AlignEnum.Center,
+                X = 0,
+                XShift = 175,
+                Y = 1,
+                XRef = "paper",
+                YRef = "paper",
+            });
     }
 
     private async Task SetupChart()
@@ -262,7 +299,7 @@
                     YAxis = "y",
                     ShowLegend = false,
                     Name = "Temperature",
-                    
+
                 };
 
             HeatMap hm = new HeatMap()
@@ -280,7 +317,7 @@
                     XGap = 3,
                     YGap = 1,
                     ColorScale = colorScale,
-                        ZMin = 0,
+                    ZMin = 0,
                     ZMax = 1,
                     Name = "Fertility"
                 };
@@ -359,6 +396,14 @@
             {
                 Repo.DeleteCycleAsync(cycleToRemove.Item.StartDate.ToKey());
             }
+        }
+    }
+
+    private async Task DownloadChartImageAsync()
+    {
+        if (chart != null)
+        {
+            await chart.DownloadImage(ImageFormat.Png, Convert.ToUInt32(layout?.Height.Value), Convert.ToUInt32(layout?.Width.Value), "Chart-" + Cycle.StartDate.ToString("yyyy-MM-dd") + "-Cycle-" + CycleIndex);
         }
     }
 
