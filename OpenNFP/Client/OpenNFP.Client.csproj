@@ -43,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\routes.json">
+    <Content Update="staticwebapp.config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
