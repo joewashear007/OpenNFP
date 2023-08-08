@@ -32,6 +32,10 @@
             <MudListItem OnClick="Import" Text="Import" />
             <MudDivider />
             <MudListItem OnClick="Export" Text="Export" />
+            <MudDivider />
+            <MudListItem OnClick="() => Notify(true)" Text="Notify On" />
+            <MudDivider />
+            <MudListItem OnClick="() => Notify(false)" Text="Notify Off" />
         </MudList>
     </MudPaper>
 </MudStack>
@@ -63,8 +67,10 @@
     private ImportExportView? importData { get; set; } = null;
     private string importErrorText { get; set; } = "";
 
-    private void ResetSync(){
-        if (AppState is not null){
+    private void ResetSync()
+    {
+        if (AppState is not null)
+        {
             AppState.ShowStartUpSync = true;
             Logger.LogDebug("Reseting AppState ShowStartUpSync = {Value}", AppState.ShowStartUpSync);
             StateHasChanged();
@@ -116,5 +122,18 @@
         await localStorage.ClearAsync();
         await DemoData.LoadDemoData(Repo, DateTime.Today, clear: true);
         MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri, true);
+    }
+
+    private async Task Notify(bool on)
+    {
+        if (on)
+        {
+            await JS.InvokeVoidAsync("notifyOn");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("notifyOff");
+
+        }
     }
 }
