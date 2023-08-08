@@ -42,4 +42,10 @@
     <None Include="Pages\Terms.razor" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\routes.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
