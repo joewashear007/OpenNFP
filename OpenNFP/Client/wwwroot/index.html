@@ -153,15 +153,15 @@
         }
 
         window.notifyOn = async function () {
+            const registration = await navigator.serviceWorker.ready;
             Notification.requestPermission().then((result) => {
                 if (result === "granted") {
                     const options = {
-                        body: "data goes here",
+                        body: "This is an example of the notifications.",
                     };
-                    new Notification("Test Notify", options);
+                    registration.showNotification("Example Notifcation!")
                 }
             });
-            const registration = await navigator.serviceWorker.ready;
             try {
                 await registration.periodicSync.register("show_notify", {
                     minInterval: 5 * 60 * 1000,
