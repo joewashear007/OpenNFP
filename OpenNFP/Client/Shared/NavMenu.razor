@@ -12,7 +12,7 @@
 
     <MudNavMenu>
         <MudNavLink Href="@(MyNavigationManager.BaseUri)" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-        <MudNavLink Href="@(MyNavigationManager.BaseUri + "/editday/" + DateTime.Today.ToKey())" Match="NavLinkMatch.Prefix">Edit Day</MudNavLink>
+        <MudNavLink Href="@(MyNavigationManager.BaseUri + "/cycles")" Match="NavLinkMatch.All">Cycles</MudNavLink>
         <MudNavLink Href="@(MyNavigationManager.BaseUri + "/sync")" Match="NavLinkMatch.All">Sync</MudNavLink>
         <MudNavLink Href="@(MyNavigationManager.BaseUri + "/terms")" Match="NavLinkMatch.All">Terms</MudNavLink>
         <MudNavGroup Title="Settings" Expanded="true">

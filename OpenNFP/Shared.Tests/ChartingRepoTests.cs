@@ -277,5 +277,96 @@ namespace OpenNFP.Shared.Tests
             repo.ExportModel.Records.ForEach(Console.WriteLine);
             Assert.IsTrue(repo.ExportModel.Records.All(q => q.IsEmpty() == false), $"Expected all cycles days to be not empty at the end");
         }
+
+        [TestMethod]
+        public async Task Sync_WithDeletedCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 12))
+            {
+                await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-4), Temperature = 97 + i * .1M }, startNewCycle:  i == 6);
+            }
+            await repo.DeleteCycleAsync(DateTime.Today.AddDays(-5).ToKey());
+
+            Console.WriteLine("First Repo Cycles:");
+            repo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.ExportModel.Cycles.Where(q => !q.Deleted).Count(), $"Expected one cycle with deleted cycles");
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend(), new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 12))
+            {
+                await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow });
+            }
+
+            Console.WriteLine("Secondary Repo Cycles:");
+            secondaryRepo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.ExportModel.Cycles.Where(q => !q.Deleted).Count(), $"Expected one cycle in seconday repo");
+
+            await repo.MergeAsync(secondaryRepo.ExportModel);
+
+            Console.WriteLine("Merged Cycles:");
+            repo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.CycleCount, "Expected 1 Cycle");
+            Assert.AreEqual(DateTime.Today.ToKey(), repo.Cycles.First(q =>!q.Item.Deleted).Item.EndDate.ToKey(), "Expected ");
+
+        }
+
+        [TestMethod]
+        public async Task Sync_IncomingDeletedCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 12))
+            {
+                await repo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-4), Temperature = 97 + i * .1M });
+            }
+
+            Console.WriteLine("First Repo Cycles:");
+            repo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.ExportModel.Cycles.Where(q => !q.Deleted).Count(), $"Expected one cycle with deleted cycles");
+
+            ChartingRepo secondaryRepo = new(new FakeStorageBackend(), new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 12))
+            {
+                await secondaryRepo.AddUpdateRecord(new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow }, startNewCycle: i == 6);
+            }
+            await secondaryRepo.DeleteCycleAsync(DateTime.Today.AddDays(-5).ToKey());
+
+            Console.WriteLine("Secondary Repo Cycles:");
+            secondaryRepo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.ExportModel.Cycles.Where(q => !q.Deleted).Count(), $"Expected one cycle in seconday repo");
+
+            await repo.MergeAsync(secondaryRepo.ExportModel);
+
+            Console.WriteLine("Merged Cycles:");
+            repo.ExportModel.Cycles.ForEach(Console.WriteLine);
+            Assert.AreEqual(1, repo.CycleCount, "Expected 1 Cycle");
+            Assert.AreEqual(DateTime.Today.ToKey(), repo.Cycles.First(q => !q.Item.Deleted).Item.EndDate.ToKey(), "Expected ");
+
+        }
+
+
+
+        [TestMethod]
+        public async Task Initiaze()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() {});
+            await storageBackend.WriteAsync(ChartingRepo.CYCLE_KEY, new List<Cycle>() { 
+                new Cycle() { StartDate = DateTime.Today.AddDays(-90) },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-60) },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-45), Deleted = true },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-42), Deleted = true },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-33), Deleted = true },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-30) },
+                new Cycle() { StartDate = DateTime.Today.AddDays(-5), Deleted = true }
+            });
+            var repo = new ChartingRepo (storageBackend, new NullLogger<IChartingRepo>());
+            await repo.InitializeAsync();
+            Assert.AreEqual(3, repo.CycleCount, "Expected only active secrets");
+        }
     }
 }

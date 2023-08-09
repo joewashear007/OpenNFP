@@ -95,5 +95,15 @@ namespace OpenNFP.Shared.Models
 
         [JsonIgnore]
         public bool Auto { get; internal set; }
+
+        public override string ToString()
+        {
+            string outStr =  $"Cycle: {StartDate.ToShortDateString()}-{EndDate?.ToShortDateString()} [{Length} days]";
+            if (Deleted)
+            {
+                outStr += " DELETED";
+            }
+            return outStr;
+        }
     }
 }

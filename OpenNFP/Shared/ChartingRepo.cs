@@ -127,6 +127,11 @@ namespace OpenNFP.Shared
         {
             if (_knownCycles.TryGetValue(date, out Cycle value))
             {
+                string? prevKey = _knownCycles.Keys.TakeWhile(q => q != date).LastOrDefault(q => !_knownCycles[q].Deleted);
+                if (prevKey != null && _knownCycles.TryGetValue(prevKey, out Cycle prevCyle))
+                {
+                    prevCyle.EndDate = value.EndDate;
+                }
                 value.Deleted = true;
                 await _saveSettings();
                 return true;
@@ -176,6 +181,9 @@ namespace OpenNFP.Shared
             if (!_knownCycles.ContainsKey(key))
             {
                 _knownCycles[key] = new Cycle() { Auto = true, StartDate = date };
+            } else
+            {
+                _knownCycles[key].Deleted = false;
             }
         }
 
@@ -185,7 +193,7 @@ namespace OpenNFP.Shared
 
             if (_knownCycles.Count > 2)
             {
-                // find and suto delete short cycles
+                // find and auto delete short cycles
                 var cycleStartDays = _knownCycles.Keys.ToList();
 
                 for (int i = 2; i < cycleStartDays.Count; i++)
@@ -202,20 +210,23 @@ namespace OpenNFP.Shared
             }
 
 
-                DateTime curDate = _settings.StartDate;
+            DateTime curDate = _settings.StartDate;
             int cycleDay = 1;
             Cycle? prevCycle = null;
             do
             {
                 string curkey = curDate.ToKey();
-                if (_knownCycles.TryGetValue(curkey, out Cycle value) && !value.Deleted)
+                if (_knownCycles.TryGetValue(curkey, out Cycle? value))
                 {
-                    cycleDay = 1;
-                    if (prevCycle != null)
+                    if (value != null && !value.Deleted)
                     {
-                        prevCycle.EndDate = curDate.AddDays(-1);
+                        cycleDay = 1;
+                        if (prevCycle != null)
+                        {
+                            prevCycle.EndDate = curDate.AddDays(-1);
+                        }
+                        prevCycle = _knownCycles[curkey];
                     }
-                    prevCycle = _knownCycles[curkey];
                 }
                 if (!await _dayRepo.ExistsAsync(curkey))
                 {
@@ -226,7 +237,9 @@ namespace OpenNFP.Shared
                 cycleDay++;
                 curDate = curDate.AddDays(1);
             } while (curDate <= _settings.EndDate);
-            _knownCycles[_knownCycles.Keys.Last()].EndDate = _settings.EndDate;
+
+            string lastValidCycle = _knownCycles.Last(q => !q.Value.Deleted).Key;
+            _knownCycles[lastValidCycle].EndDate = _settings.EndDate;
         }
 
 
@@ -244,6 +257,14 @@ namespace OpenNFP.Shared
                     //TODO: should this be a app settings?
                     _settings.EndDate = DateTime.Today;
                 }
+                DateTime? cycleStart = _knownCycles.Keys.First().ToDateTime();
+                if (cycleStart.HasValue && loadedSettings.StartDate > cycleStart.Value)
+                {
+                    //TODO: should this be a app settings?
+                    _settings.StartDate = cycleStart.Value;
+                }
+
+                // TODO: remove, this is an old beahavior
                 loadedSettings.Cycles.ForEach(q => _knownCycles.TryAdd(q.StartDate.ToKey(), q));
             }
             else

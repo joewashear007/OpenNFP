@@ -1,0 +1,36 @@
+﻿@page "/cycles"
+@using OpenNFP.Client.Utils
+@inject IChartingRepo ChartingRepo
+
+@foreach (var ci in cycles)
+{
+    <MudCard Elevation="4" Outlined="true" Class="my-8 mx-8">
+        <MudCardContent>
+            <MudText Typo="Typo.h5">Cycle @ci.Index</MudText>
+            <MudText Typo="Typo.body2">
+                @ci.Item.StartDate.ToShortDateString() - @(ci.Item.EndDate?.ToShortDateString() ?? "") [@ci.Item.Length Days]
+            </MudText>
+            <MudTextField @bind-Value="@ci.Item.Notes" Label="Cycle Notes" Variant="Variant.Outlined" Lines="3" />
+
+        </MudCardContent>
+        @*<MudCardActions>
+    <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+    </MudCardActions>*@
+    </MudCard>
+
+}
+
+
+@code {
+    private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            cycles = ChartingRepo.Cycles.ToList();
+            //await LoadNext();
+            StateHasChanged();
+        }
+    }
+}
