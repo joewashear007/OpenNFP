@@ -349,6 +349,41 @@ namespace OpenNFP.Shared.Tests
         }
 
 
+        [TestMethod]
+        public async Task RestoreCycle_DeletedShortCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            ChartingRepo repo = new(storageBackend, new NullLogger<IChartingRepo>());
+            foreach (int i in Enumerable.Range(0, 40))
+            {
+                var rec = new DayRecord { Date = DateTime.Today.AddDays(-1 * i), ModifiedOn = DateTime.UtcNow.AddHours(-4), Temperature = 97 + i * .1M };
+                bool newCyle = i == 5 || i == 3;
+                await repo.AddUpdateRecord(rec, newCyle);
+            }
+            await repo.DeleteCycleAsync(DateTime.Today.AddDays(-1 * 4).ToKey());
+            await repo.DeleteCycleAsync(DateTime.Today.AddDays(-1 * 2).ToKey());
+
+            var next_rec = new DayRecord { Date = DateTime.Today.AddDays(1), ModifiedOn = DateTime.UtcNow.AddHours(-4), Temperature = 97.1M };
+            await repo.AddUpdateRecord(next_rec);
+
+            Console.WriteLine("Current Cycles:");
+            repo.GetCycles(skipDeleted: false).Select(q => q.Item).ToList().ForEach(Console.WriteLine);
+
+
+            Assert.AreEqual(repo.GetCycles(skipDeleted: true).Count(), 1);
+            Assert.AreEqual(repo.GetCycles(skipDeleted: false).Count(), 3);
+
+            await repo.RestoreCycleAsync(DateTime.Today.AddDays(-1 * 4).ToKey());
+
+            Console.WriteLine("Updated Cycles:");
+            repo.GetCycles(skipDeleted: false).Select(q => q.Item).ToList().ForEach(Console.WriteLine);
+
+            Assert.AreEqual(repo.GetCycles(skipDeleted: true).Count(), 2);
+            Assert.AreEqual(repo.GetCycles(skipDeleted: false).Count(), 3);
+
+        }
+
 
         [TestMethod]
         public async Task Initiaze()

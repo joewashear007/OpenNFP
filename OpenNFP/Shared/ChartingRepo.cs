@@ -224,7 +224,7 @@ namespace OpenNFP.Shared
             if (_knownCycles.Count > 2)
             {
                 // find and auto delete short cycles
-                var cycleStartDays = _knownCycles.Keys.ToList();
+                var cycleStartDays = _knownCycles.Where(q => !q.Value.Deleted).Select(q => q.Key).ToList();
 
                 for (int i = 2; i < cycleStartDays.Count; i++)
                 {
