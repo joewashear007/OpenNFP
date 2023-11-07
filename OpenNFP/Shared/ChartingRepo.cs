@@ -29,6 +29,23 @@ namespace OpenNFP.Shared
             }
         }
 
+        public IEnumerable<CycleIndex<Cycle>> GetCycles(bool skipDeleted = true, bool sortNewestFirst = true)
+        {
+            var _searchCycles = _knownCycles.Values.AsEnumerable<Cycle>();
+            if (sortNewestFirst)
+            {
+                _searchCycles = _searchCycles.Reverse();
+            }
+            if (skipDeleted)
+            {
+                _searchCycles = _searchCycles.Where(q => !q.Deleted);
+            }
+
+            return _searchCycles
+                .Select((v, i) => new CycleIndex<Cycle>() { Index = _knownCycles.Count - i, Item = v })
+                .ToList();
+        }
+
         public ImportExportView ExportModel => new()
         {
             Cycles = _knownCycles.Values.Where(q => !q.Deleted).ToList(),
@@ -139,6 +156,18 @@ namespace OpenNFP.Shared
             return false;
         }
 
+        public async Task<bool> RestoreCycleAsync(string date)
+        {
+            if (_knownCycles.TryGetValue(date, out Cycle value))
+            {
+                value.Deleted = false;
+                await _computeCycleDays();
+                await _saveSettings();
+                return true;
+            }
+            return false;
+        }
+
         public int GetCycleDay(string date)
         {
             if (_cycleDayMap.TryGetValue(date, out int day))
@@ -181,7 +210,8 @@ namespace OpenNFP.Shared
             if (!_knownCycles.ContainsKey(key))
             {
                 _knownCycles[key] = new Cycle() { Auto = true, StartDate = date };
-            } else
+            }
+            else
             {
                 _knownCycles[key].Deleted = false;
             }

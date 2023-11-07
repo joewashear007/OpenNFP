@@ -31,5 +31,7 @@ namespace OpenNFP.Shared.Interfaces
 
         Task MergeAsync(ImportExportView secondaryData);
         Task SyncAsync(IRemoteStorageBackend remoteStorage, CancellationToken cancellationToken);
+        IEnumerable<CycleIndex<Cycle>> GetCycles(bool skipDeleted = true, bool sortNewestFirst = true);
+        Task<bool> RestoreCycleAsync(string date);
     }
 }

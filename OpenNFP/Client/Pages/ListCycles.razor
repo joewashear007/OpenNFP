@@ -1,17 +1,35 @@
 ﻿@page "/cycles"
 @using OpenNFP.Client.Utils
+@implements IDisposable
 @inject IChartingRepo ChartingRepo
+@inject IAppState AppState
+@inject NavigationManager uriHelper;
 
 @foreach (var ci in cycles)
 {
     <MudCard Elevation="4" Outlined="true" Class="my-8 mx-8">
         <MudCardContent>
-            <MudText Typo="Typo.h5">Cycle @ci.Index</MudText>
+            <MudText Typo="Typo.h5">
+                @if (ci?.Item?.Deleted ?? false)
+                {
+                    <MudChip Color="Color.Error">Deleted</MudChip>
+                }
+                Cycle @ci.Index
+            </MudText>
             <MudText Typo="Typo.body2">
                 @ci.Item.StartDate.ToShortDateString() - @(ci.Item.EndDate?.ToShortDateString() ?? "") [@ci.Item.Length Days]
             </MudText>
             <MudTextField @bind-Value="@ci.Item.Notes" Label="Cycle Notes" Variant="Variant.Outlined" Lines="3" />
 
+            <MudButton Href="@(uriHelper.BaseUri + "/cycle/" + ci.Item?.StartDate.ToKey())" StartIcon="@Icons.Material.Filled.OpenWith">Open Chart</MudButton>
+
+            @if (ci?.Item?.Deleted ?? false)
+            {
+                <MudButton Color="Color.Warning" OnClick="() => UndeleteCycle(ci.Item)">Undelete Cycle</MudButton>
+            } else
+            {
+                <MudButton Color="Color.Error" OnClick="() => DeleteCycle(ci.Item)">Delete Cycle</MudButton>
+            }
         </MudCardContent>
         @*<MudCardActions>
     <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
@@ -22,15 +40,58 @@
 
 
 @code {
+    private readonly string IncludeDeletedCyclesKey = nameof(ListCycles) + ":IncludeDeletedCycles";
     private List<CycleIndex<Cycle>> cycles = new List<CycleIndex<Cycle>>();
+
+    private bool includeDeletedCycles = false;
+
+    protected override void OnInitialized()
+    {
+        AppState.Changed += DoUpdate;
+        if (this.AppState.TryGet<bool>(IncludeDeletedCyclesKey, out bool value))
+        {
+            includeDeletedCycles = value;
+        }
+        else
+        {
+            includeDeletedCycles = false;
+            this.AppState.Set(IncludeDeletedCyclesKey, false);
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.Changed -= DoUpdate; // Important1
+    }
+    private void DoUpdate(object? sender, EventArgs? e)
+    {
+        ReloadCycles();
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
-            cycles = ChartingRepo.Cycles.ToList();
-            //await LoadNext();
-            StateHasChanged();
+            ReloadCycles();
         }
+    }
+
+    protected void ReloadCycles()
+    {
+        if (this.AppState.TryGet<bool>(IncludeDeletedCyclesKey, out bool value))
+        {
+            includeDeletedCycles = value;
+        }
+        cycles = ChartingRepo.GetCycles(includeDeletedCycles).ToList();
+        StateHasChanged();
+    }
+
+    protected async Task UndeleteCycle(Cycle c)
+    {
+        await ChartingRepo.RestoreCycleAsync(c.StartDate.ToKey());
+    }
+    protected async Task DeleteCycle(Cycle c)
+    {
+        await ChartingRepo.DeleteCycleAsync(c.StartDate.ToKey());
     }
 }

@@ -43,6 +43,21 @@
         </AuthorizeView>
         @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
         <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
+        @if (uriHelper.ToBaseRelativePath(uriHelper.Uri) == "/cycles")
+        {
+            if (AppState.TryGet("ListCycles:IncludeDeletedCycles", out bool includeDelCycle))
+            {
+                if (includeDelCycle)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterListOff" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                }
+            }
+        }
+
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen">
         <NavMenu />
@@ -59,6 +74,7 @@
     bool _drawerOpen = false;
 
     public bool isMainPage { get => new Uri(uriHelper.Uri).Segments.Count() == 1; }
+
 
     void DrawerToggle()
     {
@@ -82,6 +98,7 @@
 
     private void Refresh()
     {
+
         //TODO: refresh main app page
         AppState.ShouldRunSyncOnStartup = true;
         StateHasChanged();
@@ -201,6 +218,14 @@
                 Logger.LogInformation("Skipping Sync since it was not requested");
             }
 
+        }
+    }
+    protected void ToggleFilterList()
+    {
+        if (AppState.TryGet("ListCycles:IncludeDeletedCycles", out bool includeDelCycle))
+        {
+            AppState.Set("ListCycles:IncludeDeletedCycles", !includeDelCycle);
+            StateHasChanged();
         }
     }
 
