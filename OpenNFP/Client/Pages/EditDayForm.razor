@@ -39,81 +39,81 @@
                                          Adornment="Adornment.End" AdornmentText="°F" Clearable=true />
                     </MudItem>
                     <MudItem md="3">
-                        <MudCheckBox Class="mt-2"
-                                     Label="Adnormal Temp" Disabled="@disableInput"
-                                     @bind-Checked="@Model.AdmormalTemperature" />
+                        <MudCheckBox T="bool" Class="mt-2"
+                                     Label="Abnormal Temp" Disabled="@disableInput"
+                                     @bind-Value="@Model.AdmormalTemperature" />
                     </MudItem>
                     <MudItem md="3">
-                        <MudCheckBox Class="mt-2"
+                        <MudCheckBox T="bool" Class="mt-2"
                                      Label="Coitus" Disabled="@disableInput"
-                                     @bind-Checked="@Model.Coitus"
+                                     @bind-Value="@Model.Coitus"
                                      Color="Color.Secondary"
                                      CheckedIcon="@Icons.Material.Filled.Favorite"
                                      UncheckedIcon="@Icons.Material.Filled.FavoriteBorder" />
                     </MudItem>
                     <MudItem md="6">
                         <MudField Label="Ovulation Test" Class="mb-4">
-                            <MudRadioGroup @bind-SelectedOption="@Model.OvulationTest.ValueInt">
+                            <MudRadioGroup T="int" @bind-Value="@Model.OvulationTest.ValueInt">
                                 @foreach (var v in Enum.GetValues<TestResult>())
                                 {
-                                    <MudRadio Option="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
+                                    <MudRadio T="int" Value="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
                                 }
                             </MudRadioGroup>
                         </MudField>
                     </MudItem>
                     <MudItem md="6">
-                        <MudField Label="Pregancy Test">
-                            <MudRadioGroup @bind-SelectedOption="@Model.PregnancyTest.ValueInt">
+                        <MudField Label="Pregnancy Test">
+                            <MudRadioGroup T="int" @bind-Value="@Model.PregnancyTest.ValueInt">
                                 @foreach (var v in Enum.GetValues<TestResult>())
                                 {
-                                    <MudRadio Option="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
+                                    <MudRadio T="int" Value="@((int)v)" Disabled="@disableInput">@v.ToString()</MudRadio>
                                 }
                             </MudRadioGroup>
                         </MudField>
                     </MudItem>
                 </MudGrid>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.Clearblue.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.Clearblue.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.Clearblue.Min"
                            Max="@Model.Clearblue.Max"
                            @bind-Value="@Model.Clearblue.ValueInt"
                            Class="mb-4 pl-8 pr-8">ClearBlue Monitor Value</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.CervixTexture.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.CervixTexture.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.CervixTexture.Min"
                            Max="@Model.CervixTexture.Max"
                            @bind-Value="@Model.CervixTexture.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Firmness</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.CervixOpening.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.CervixOpening.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.CervixOpening.Min"
                            Max="@Model.CervixOpening.Max"
                            @bind-Value="@Model.CervixOpening.ValueInt"
                            Class="mb-4 pl-8 pr-8">Cervix Openness</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.MucusCharacteristic.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.MucusCharacteristic.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.MucusCharacteristic.Min"
                            Max="@Model.MucusCharacteristic.Max"
                            @bind-Value="@Model.MucusCharacteristic.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Characteristic</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.MucusSensation.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.MucusSensation.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.MucusSensation.Min"
                            Max="@Model.MucusSensation.Max"
                            @bind-Value="@Model.MucusSensation.ValueInt"
                            Class="mb-4 pl-8 pr-8">Mucus Sensation</MudSlider>
 
-                <MudSlider TickMarks="true" TickMarkLabels="@Model.MenstruationFlow.Labels"
+                <MudSlider T="int" TickMarks="true" TickMarkLabels="@Model.MenstruationFlow.Labels"
                            Step="1" Disabled="@disableInput"
                            Min="@Model.MenstruationFlow.Min"
                            Max="@Model.MenstruationFlow.Max"
                            @bind-Value="@Model.MenstruationFlow.ValueInt"
-                           Class="mb-4 pl-8 pr-8">Menstration</MudSlider>
+                           Class="mb-4 pl-8 pr-8">Menstruation</MudSlider>
 
             </MudCardContent>
 
@@ -122,7 +122,7 @@
             </MudCardContent>
 
             <MudCardContent Class=" mt-8">
-                <MudCheckBox @bind-Checked="@Model.StartCycle" Label="This Day Should Start a Cycle" Disabled="@disableInput"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="@Model.StartCycle" Label="This Day Should Start a Cycle" Disabled="@disableInput"></MudCheckBox>
             </MudCardContent>
 
             <MudCardActions>
@@ -176,13 +176,13 @@
                 }
                 else
                 {
-                    // discard chanages - let the page change happen
-                    form.Reset();
+                    // discard changes - let the page change happen
+                    await form.ResetAsync();
                 }
             }
             else
             {
-                // stop the navigataion
+                // stop the navigation
                 return;
             }
         }

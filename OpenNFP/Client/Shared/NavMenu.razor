@@ -25,18 +25,18 @@
     </MudNavMenu>
 
     <MudPaper>
-        <MudList Clickable="true">
-            <MudDivider />
-            <MudListItem Href="@(MyNavigationManager.BaseUri + "/terms")" Text="Terms of Service" />
-            <MudDivider />
-            <MudListItem OnClick="Import" Text="Import" />
-            <MudDivider />
-            <MudListItem OnClick="Export" Text="Export" />
-            <MudDivider />
-            <MudListItem OnClick="() => Notify(true)" Text="Notify On" />
-            <MudDivider />
-            <MudListItem OnClick="() => Notify(false)" Text="Notify Off" />
-        </MudList>
+        @* <MudList T="string" >
+            <MudDivider T="string" />
+            <MudListItem T="string" Href="@(MyNavigationManager.BaseUri + "/terms")" Text="Terms of Service" />
+            <MudDivider T="string"  />
+            <MudListItem T="string" OnClick="Import" Text="Import" />
+            <MudDivider T="string"  />
+            <MudListItem T="string" OnClick="Export" Text="Export" />
+            <MudDivider T="string"  />
+            <MudListItem T="string" OnClick="() => Notify(true)" Text="Notify On" />
+            <MudDivider T="string"  />
+            <MudListItem T="string" OnClick="() => Notify(false)" Text="Notify Off" />
+        </MudList> *@
     </MudPaper>
 </MudStack>
 
@@ -86,7 +86,7 @@
 
     private async Task Import()
     {
-        bool? result = await mbox.Show();
+        bool? result = await mbox.ShowAsync();
         if (result.HasValue && result.Value && importData != null)
         {
             await Repo.ImportAsync(importData);

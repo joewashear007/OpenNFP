@@ -12,7 +12,7 @@
             <MudText Typo="Typo.h5">
                 @if (ci?.Item?.Deleted ?? false)
                 {
-                    <MudChip Color="Color.Error">Deleted</MudChip>
+                    <MudChip T="string" Color="Color.Error">Deleted</MudChip>
                 }
                 Cycle @ci.Index
             </MudText>

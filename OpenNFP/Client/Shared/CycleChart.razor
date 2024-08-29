@@ -11,12 +11,13 @@
 @using Plotly.Blazor.Traces
 @using Plotly.Blazor.Traces.ScatterLib
 @using System.Globalization
+@using System
 
 
 
 <MudCard>
         <MudCardContent Class="p-0 relative"> 
-        <MudPaper Class="absolute z-50" Elevation="4" Outlined="true" Style="@("top:0px; right: 0px; background-color: " + MudBlazor.Colors.Grey.Lighten3)">
+        <MudPaper Class="absolute z-50" Elevation="4" Outlined="true" Style="@("top:0px; right: 0px; background-color: " + MudBlazor.Colors.Gray.Lighten3)">
                 <MudToolBar Dense=true >
                     @if (LimitDays)
                     {
@@ -51,18 +52,15 @@
         {
             <div style="@(LimitDays ? "overflow-x:scroll; overflow-y:hidden;" : "") padding-bottom:20px @(RenderChart ?"":  "display:none")">
 
-                <PlotlyChart @bind-Config="config"
-                         @bind-Layout="layout"
-                         @bind-Data="data"
-                         @ref="chart" />
+                <PlotlyChart @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
             </div>
         }
 
         @if (!RenderChart)
         {   
             <MudText Typo="Typo.h6" Align="Align.Center" Class="d-inline">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----")</MudText>
-            <MudChip Label="true">Cycle @CycleIndex</MudChip>
-            <MudChip Label="true">@Cycle.Length Days</MudChip>
+            <MudChip T="string" Label="true">Cycle @CycleIndex</MudChip>
+            <MudChip T="string" Label="true">@Cycle.Length Days</MudChip>
             <MudButton OnClick="() => RenderChart = true" Variant="Variant.Outlined">Load Chart</MudButton>
         }
     </MudCardContent>
@@ -409,7 +407,7 @@
 
     /// <summary>
     /// Method which is called by JSRuntime once a plot has been clicked, to invoke the passed in Action
-    /// Objects are currently required for accomodating different plot value types
+    /// Objects are currently required for accommodating different plot value types
     /// </summary>
     /// <param name="index"></param>
     [JSInvokable("ClickEvent")]
@@ -428,6 +426,5 @@
     public void Dispose()
     {
         _chartRef?.Dispose();
-        chart?.Dispose();
     }
 }
