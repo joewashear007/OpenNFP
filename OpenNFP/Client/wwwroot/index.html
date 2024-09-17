@@ -201,7 +201,7 @@
         });
         window.subscribeClickEvent = function (dotNetObj, id) {
             var plot = document.getElementById(id);
-            plot.on('plotly_click', function (data) {
+            typeof plot.on === 'function' && plot.on('plotly_click', function (data) {
                 let index = -1;
                 if (typeof (data.points[0].pointIndex) === "number") {
                     index = data.points[0].pointIndex

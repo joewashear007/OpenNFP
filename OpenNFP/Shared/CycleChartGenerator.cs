@@ -61,6 +61,14 @@ namespace OpenNFP.Shared
                     {
                         indexStr += "🤍";
                     }
+                    if (day.Item.OvulationTest == TestResult.Positive)
+                    {
+                        indexStr +="➕";
+                    }
+                    if (day.Item.PregnancyTest == TestResult.Positive)
+                    {
+                        indexStr += "✔";
+                    }
                     if (!string.IsNullOrEmpty(day.Item?.Notes))
                     {
                         indexStr += "📄";
