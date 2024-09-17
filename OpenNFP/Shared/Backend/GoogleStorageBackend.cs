@@ -17,7 +17,7 @@ using System.Windows.Markup;
 
 namespace OpenNFP.Shared.Backend
 {
-    public class GoogleStorageBackend : IRemoteStorageBackend, IDisposable
+    public class GoogleStorageBackend : IRemoteStorageBackEnd, IDisposable
     {
         internal class AuthTokenHttpInitializer : IConfigurableHttpClientInitializer
         {
@@ -43,8 +43,6 @@ namespace OpenNFP.Shared.Backend
         };
         private bool disposedValue;
 
-        public string FileName { get; set; } = "opennfp.json";
-
         public GoogleStorageBackend(IAccessTokenProvider tokenProvider, NavigationManager navigationManager)
         {
             TokenProvider = tokenProvider;
@@ -53,12 +51,12 @@ namespace OpenNFP.Shared.Backend
 
 
 
-        public async Task<SyncInfo> GetLastSyncInfo(CancellationToken token)
+        public async Task<SyncInfo> GetLastSyncInfo(string filename, CancellationToken token)
         {
             DriveService service = await GetDriveService(token);
 
             var listRequest = service.Files.List();
-            listRequest.Q = $"name='{FileName}'";
+            listRequest.Q = $"name='{filename}'";
             listRequest.Fields = "files(id,name,createdTime,modifiedTime,size)";
             var rawfiles = await listRequest.ExecuteAsync(token);
             var file = rawfiles.Files.FirstOrDefault();

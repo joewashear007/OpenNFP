@@ -356,13 +356,13 @@ namespace OpenNFP.Shared
             await _saveSettings();
         }
 
-        public async Task SyncAsync(IRemoteStorageBackend remoteStorage, CancellationToken cancellationToken)
+        public async Task SyncAsync(IRemoteStorageBackEnd remoteStorage, string filename, CancellationToken cancellationToken)
         {
-            Logger.LogInformation("Sync Initiated");
-            var info = await remoteStorage.GetLastSyncInfo(cancellationToken);
+            Logger.LogInformation("Getting Sync Info, {filename}", filename);
+            var info = await remoteStorage.GetLastSyncInfo(filename, cancellationToken);
             if (info.SyncTimeStamp > _settings.LastSyncDate)
             {
-                Logger.LogInformation("Sync Initiated");
+                Logger.LogInformation("Sync Initiated, {filename}", filename);
                 var data = await remoteStorage.ReadAsync<ImportExportView>(info, cancellationToken);
                 if (data is not null)
                 {

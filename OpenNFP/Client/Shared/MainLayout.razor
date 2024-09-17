@@ -3,7 +3,7 @@
 @using System.Diagnostics.CodeAnalysis;
 @inherits LayoutComponentBase
 @inject NavigationManager uriHelper;
-@inject IRemoteStorageBackend RemoteStorageBackend;
+@inject IRemoteStorageBackEnd RemoteStorageBackend;
 @inject IChartingRepo ChartingRepo
 @inject ISnackbar Snackbar
 @inject ILogger<MainLayout> Logger;
@@ -131,7 +131,7 @@
             });
 
 
-            await ChartingRepo.SyncAsync(RemoteStorageBackend, cancellationTokenSource.Token);
+            await ChartingRepo.SyncAsync(RemoteStorageBackend, AppState.Filename, cancellationTokenSource.Token);
             Snackbar.Remove(_snackbar);
 
             if (!cancellationTokenSource.IsCancellationRequested)

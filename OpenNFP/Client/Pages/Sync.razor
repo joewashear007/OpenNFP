@@ -15,8 +15,9 @@
 @inject HttpClient client;
 @inject IChartingRepo repo;
 @inject IDialogService DialogService;
-@inject IRemoteStorageBackend remoteStorageBackend;
+@inject IRemoteStorageBackEnd remoteStorageBackend;
 @inject IJSRuntime JSRuntime
+@inject IAppState AppState
 
 <PageTitle>Sync Data To Google Drive</PageTitle>
 
@@ -31,6 +32,9 @@
                     Hello, @context.User?.Identity?.Name! Your Last Sync was on @(repo.Settings.LastSyncDate.ToString("g"))
                 </MudCardHeader>
                 <MudCardContent>
+                    <p>
+                        The current synced filename: <pre>@(AppState.Filename)</pre>
+                    </p>
                     <pre>
                         @if (_loading)
                         {
@@ -155,7 +159,7 @@
             ErrorMsg = "";
             _loading = true;
             OidcInfo = await JSRuntime.InvokeAsync<string>("oidc_info");
-            File = await remoteStorageBackend.GetLastSyncInfo(cancellationTokenSource.Token);
+            File = await remoteStorageBackend.GetLastSyncInfo(AppState.Filename, cancellationTokenSource.Token);
         }
 
         catch (Exception e)
@@ -224,7 +228,7 @@
             cancellationTokenSource = new CancellationTokenSource();
             ErrorMsg = "";
             _processing = true;
-            await repo.SyncAsync(remoteStorageBackend, cancellationTokenSource.Token);
+            await repo.SyncAsync(remoteStorageBackend, AppState.Filename, cancellationTokenSource.Token);
             _processing = false;
         }
         catch (Exception e)

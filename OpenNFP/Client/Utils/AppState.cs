@@ -4,6 +4,11 @@
     {
         private Dictionary<string, object?> _state = new Dictionary<string, object?>();
 
+        public AppState()
+        {
+
+        }
+
         public event EventHandler<EventArgs> Changed;
         public void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
@@ -15,6 +20,25 @@
         public bool ShouldRunSyncOnStartup { get; set; } = true;
 
         public int InitialCyclesToLoad { get; set; } = 3;
+
+        public string Filename
+        {
+            get
+            {
+                if (TryGet(nameof(Filename), out string? f))
+                {
+                    if (!string.IsNullOrEmpty(f))
+                    {
+                        return f;
+                    }
+                }
+                return "opennfp.json";
+            }
+            set
+            {
+                Set(nameof(Filename), value);
+            }
+        }
 
         public void Set<T>(string key, T? value)
         {
@@ -56,6 +80,10 @@
         /// </summary>
         int InitialCyclesToLoad { get; set; }
 
+        /// <summary>
+        /// The filename to sync to remote storage with
+        /// </summary>
+        string Filename { get; set; }
 
         public bool TryGet<T>(string key, out T? value);
         public void Set<T>(string key, T? value);

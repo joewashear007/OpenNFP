@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace OpenNFP.Shared.Interfaces
 {
-    public interface IRemoteStorageBackend 
+    public interface IRemoteStorageBackEnd 
     {
-        Task<SyncInfo> GetLastSyncInfo(CancellationToken token);
+        Task<SyncInfo> GetLastSyncInfo(string filename, CancellationToken token);
         Task WriteAsync<T>(SyncInfo key, T obj, CancellationToken token);
         Task<T?> ReadAsync<T>(SyncInfo key, CancellationToken token);
         Task<MemoryStream> ReadStreamAsync(SyncInfo key, CancellationToken token);

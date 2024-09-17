@@ -32,7 +32,7 @@ builder.Services.AddSingleton<IChartingRepo, ChartingRepo>();
 builder.Services.AddSingleton<ICycleChartGenerator, CycleChartGenerator>();
 builder.Services.AddSingleton<IAppState, AppState>();
 
-builder.Services.AddTransient<IRemoteStorageBackend, GoogleStorageBackend>();
+builder.Services.AddTransient<IRemoteStorageBackEnd, GoogleStorageBackend>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 

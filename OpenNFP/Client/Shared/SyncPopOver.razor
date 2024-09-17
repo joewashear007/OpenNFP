@@ -1,6 +1,7 @@
-﻿@inject IRemoteStorageBackend remoteStorageBackend;
+﻿@inject IRemoteStorageBackEnd remoteStorageBackend;
 @inject IChartingRepo ChartingRepo;
 @inject ILogger<SyncPopOver> Logger;
+@inject IAppState AppState;
 
 
 <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4 mt-16" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.CenterCenter">
@@ -33,7 +34,7 @@
     {
         if (firstRender)
         {
-            await ChartingRepo.SyncAsync(remoteStorageBackend, cancellationTokenSource.Token);
+            await ChartingRepo.SyncAsync(remoteStorageBackend, AppState.Filename, cancellationTokenSource.Token);
             _isOpen = false;
             if (OnClose.HasDelegate)
             {
