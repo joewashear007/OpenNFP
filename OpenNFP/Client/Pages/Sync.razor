@@ -38,17 +38,17 @@
                     <pre>
                         @if (_loading)
                         {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Large" Indeterminate="true" />
-                        <MudText Class="ms-2">Loading File Info</MudText>
+                                <MudProgressCircular Class="ms-n1" Size="Size.Large" Indeterminate="true" />
+                                <MudText Class="ms-2">Loading File Info</MudText>
                         }
                         else
                         {
-                        <h3>Name = @File.FileName</h3>
-                        <ul>
-                        <li>Date Modified = @File.SyncTimeStamp</li>
-                        <li>Size = @File.FileSizeKb KB</li>
-                        <li>Id = @File.FileId</li>
-                                            </ul>
+                                <h3>Name = @File.FileName</h3>
+                                <ul>
+                                <li>Date Modified = @File.SyncTimeStamp</li>
+                                <li>Size = @File.FileSizeKb KB</li>
+                                <li>Id = @File.FileId</li>
+                                                    </ul>
                         }
                     </pre>
                     <pre>
@@ -59,45 +59,45 @@
                     <MudButton OnClick="refreshFileInfo" Variant="Variant.Text" Color="Color.Primary">
                         @if (_loading)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                            <MudText>Refresh</MudText>
+                                    <MudText>Refresh</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="SyncData" Variant="Variant.Text" Color="Color.Tertiary">
                         @if (_loading)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                            <MudText>Sync</MudText>
+                                    <MudText>Sync</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="ReadData" Variant="Variant.Text" Color="Color.Primary">
                         @if (_processing)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                            <MudText>Download</MudText>
+                                    <MudText>Download</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="WriteData" Variant="Variant.Text" Color="Color.Secondary">
                         @if (_processing)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                            <MudText>Write</MudText>
+                                    <MudText>Write</MudText>
                         }
                     </MudButton>
 
@@ -136,7 +136,7 @@
     string FileContent { get; set; } = string.Empty;
     string ErrorMsg { get; set; } = string.Empty;
     string OidcInfo { get; set; } = string.Empty;
-    CancellationTokenSource cancellationTokenSource { get; set; } = new(); 
+    CancellationTokenSource cancellationTokenSource { get; set; } = new();
 
     protected override async void OnAfterRender(bool firstRender)
     {
@@ -148,7 +148,8 @@
         }
     }
 
-    private void Cancel(){
+    private void Cancel()
+    {
         cancellationTokenSource.Cancel();
     }
 
@@ -179,11 +180,19 @@
             cancellationTokenSource = new CancellationTokenSource();
             ErrorMsg = "";
             _processing = true;
-            await remoteStorageBackend.WriteAsync(File, repo.ExportModel, cancellationTokenSource.Token);
+            if (string.IsNullOrEmpty(File.FileId))
+            {
+                SyncInfo newFile = new() { FileName = AppState.Filename };
+                await remoteStorageBackend.WriteAsync(newFile, repo.ExportModel, cancellationTokenSource.Token);
+            }
+            else
+            {
+                await remoteStorageBackend.WriteAsync(File, repo.ExportModel, cancellationTokenSource.Token);
+            }
             await refreshFileInfo();
 
             _processing = false;
-            await DialogService.ShowMessageBox("Sync Success", "Saved data to Gooogle drive");
+            await DialogService.ShowMessageBox("Sync Success", "Saved data to Google drive");
         }
 
         catch (Exception e)

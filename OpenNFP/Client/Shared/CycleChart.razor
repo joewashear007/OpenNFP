@@ -7,26 +7,30 @@
 
 @using OpenNFP.Client.Utils
 @using Plotly.Blazor
+@using Plotly.Blazor.Interop
 @using Plotly.Blazor.LayoutLib
 @using Plotly.Blazor.Traces
 @using Plotly.Blazor.Traces.ScatterLib
 @using System.Globalization
 @using System
+@using System.Collections
 
 
 
 <MudCard>
-        <MudCardContent Class="p-0 relative"> 
+    <MudCardContent Class="p-0 relative">
         <MudPaper Class="absolute z-50" Elevation="4" Outlined="true" Style="@("top:0px; right: 0px; background-color: " + MudBlazor.Colors.Gray.Lighten3)">
-                <MudToolBar Dense=true >
-                    @if (LimitDays)
-                    {
-                        <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith" Size="Size.Small"></MudIconButton>
-                    } else {
-                        <MudIconButton Icon="@Icons.Material.Outlined.Download" Color="Color.Inherit" Class="mr-5" OnClick="DownloadChartImageAsync" Size="Size.Small" />
-                    }
-                </MudToolBar>
-            </MudPaper>
+            <MudToolBar Dense=true>
+                @if (LimitDays)
+                {
+                    <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith" Size="Size.Small"></MudIconButton>
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Outlined.Download" Color="Color.Inherit" Class="mr-5" OnClick="DownloadChartImageAsync" Size="Size.Small" />
+                }
+            </MudToolBar>
+        </MudPaper>
 
         @if (Cycle.Length < 5 && Repo.Settings.EndDate != Cycle.EndDate)
         {
@@ -36,7 +40,7 @@
                     <MudButton OnClick="() => MergeCycle(below:false)">Merge With Above Cycle</MudButton>
                     <MudButton OnClick="() => MergeCycle(below:true)">Merge with Below Cycle</MudButton>
                 </MudButtonGroup>
-              </MudAlert>
+            </MudAlert>
         }
         @if (Loading)
         {
@@ -52,12 +56,12 @@
         {
             <div style="@(LimitDays ? "overflow-x:scroll; overflow-y:hidden;" : "") padding-bottom:20px @(RenderChart ?"":  "display:none")">
 
-                <PlotlyChart @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" />
+                <PlotlyChart @bind-Config="config" @bind-Layout="layout" @bind-Data="data" @ref="chart" ClickAction="ClickAction" AfterRender="SubscribeEvents" />
             </div>
         }
 
         @if (!RenderChart)
-        {   
+        {
             <MudText Typo="Typo.h6" Align="Align.Center" Class="d-inline">@(Cycle?.StartDate.ToString("MMM dd yyyy") ?? " -- -- ----")</MudText>
             <MudChip T="string" Label="true">Cycle @CycleIndex</MudChip>
             <MudChip T="string" Label="true">@Cycle.Length Days</MudChip>
@@ -80,7 +84,7 @@
     [Parameter]
     public bool RenderChart { get; set; } = true;
 
-
+    private IEnumerable<EventDataPoint> ClickInfos { get; set; }
     private bool firstRenderComplete = false;
     private bool updateChart = false;
     public bool Loading { get; set; } = true;
@@ -187,7 +191,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Logger.LogInformation($"CycleChart Render: {nameof(firstRender)} {firstRender}, {nameof(firstRenderComplete)} {firstRenderComplete}, {nameof(RenderChart)} {RenderChart}, {nameof(updateChart)} {updateChart}");
+        Logger.LogInformation($"Cycle {Cycle.StartDate.ToKey()}|CycleChart Render: {nameof(firstRender)} {firstRender}, {nameof(firstRenderComplete)} {firstRenderComplete}, {nameof(RenderChart)} {RenderChart}, {nameof(updateChart)} {updateChart}");
 
         if (updateChart)
         {
@@ -196,15 +200,16 @@
             {
                 await chart.React();
 
-                if (_chartRef == null)
-                {
-                    _chartRef = DotNetObjectReference.Create(this);
-                    await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
-                }
+                // if (_chartRef == null)
+                // {
+                //     _chartRef = DotNetObjectReference.Create(this);
+                //     Logger.LogInformation($"Cycle {Cycle.StartDate.ToKey()}|SubScribing to Click Events: {nameof(firstRender)} {firstRender}, {nameof(firstRenderComplete)} {firstRenderComplete}, {nameof(RenderChart)} {RenderChart}, {nameof(updateChart)} {updateChart}");
+                //     await JsRuntime.SubscribeClickEvent(_chartRef, chart.Id);
+                // }
             }
             else
             {
-                Logger.LogWarning($"Cycle Chart is Null!");
+                Logger.LogWarning($"Cycle {Cycle.StartDate.ToKey()}|Cycle Chart is Null!");
             }
 
         }
@@ -212,6 +217,7 @@
         if (!firstRenderComplete && RenderChart)
         {
             firstRenderComplete = true;
+            Logger.LogInformation($"Cycle {Cycle}|Setting up Chart: {nameof(firstRender)} {firstRender}, {nameof(firstRenderComplete)} {firstRenderComplete}, {nameof(RenderChart)} {RenderChart}, {nameof(updateChart)} {updateChart}");
             await SetupChart();
         }
 
@@ -404,6 +410,48 @@
             await chart.DownloadImage(ImageFormat.Png, Convert.ToUInt32(layout?.Height.Value), Convert.ToUInt32(layout?.Width.Value), "Chart-" + Cycle.StartDate.ToString("yyyy-MM-dd") + "-Cycle-" + CycleIndex);
         }
     }
+
+
+    public void ClickAction(IEnumerable<EventDataPoint> eventData)
+    {
+        var point = eventData.FirstOrDefault();
+        if (point != null)
+        {
+            int index = -1;
+            JsonElement pointIndex = (JsonElement)point.PointIndex;
+            if (pointIndex.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var rawIndex = pointIndex.EnumerateArray().ElementAtOrDefault(1);
+                if (int.TryParse(rawIndex.ToString(), out int ix))
+                {
+                    index = ix;
+                }
+            }
+            else
+            {
+                index = Convert.ToInt32(point.PointIndex);
+            }
+            if (point.Y?.ToString() == "Day")
+            {
+                Logger.LogInformation($"BLAZOR: click event: {index} ");
+                var d = Cycle.StartDate.AddDays(index).ToKey() ?? "";
+                if (!string.IsNullOrEmpty(d))
+                {
+                    MyNavigationManager.NavigateTo(MyNavigationManager.BaseUri + "editday/" + d);
+                }
+            }
+            else
+            {
+                Logger.LogDebug("ignoring non day event {event}", point.Y);
+            }
+        }
+    }
+
+    public async void SubscribeEvents()
+    {
+        await chart.SubscribeClickEvent();
+    }
+
 
     /// <summary>
     /// Method which is called by JSRuntime once a plot has been clicked, to invoke the passed in Action

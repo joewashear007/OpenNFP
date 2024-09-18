@@ -12,7 +12,7 @@
         /// <summary>
         /// The filename of the file to sync, should be changable but not tested
         /// </summary>
-        public string FileName { get; set; } = "opennfp.json";
+        public string FileName { get; set; } = "";
 
         /// <summary>
         /// The file size, probably could be removed

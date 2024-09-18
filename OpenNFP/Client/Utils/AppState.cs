@@ -19,7 +19,7 @@
 
         public bool ShouldRunSyncOnStartup { get; set; } = true;
 
-        public int InitialCyclesToLoad { get; set; } = 3;
+        public int InitialCyclesToLoad { get; set; } = 1;
 
         public string Filename
         {
@@ -32,7 +32,14 @@
                         return f;
                     }
                 }
-                return "opennfp.json";
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    return "opennfp_debug.json";
+                }
+                else
+                {
+                    return "opennfp.json";
+                }
             }
             set
             {
