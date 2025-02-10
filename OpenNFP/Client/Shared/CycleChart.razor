@@ -23,7 +23,7 @@
             <MudToolBar Dense=true>
                 @if (LimitDays)
                 {
-                    <MudIconButton Href="@(MyNavigationManager.BaseUri + "/cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith" Size="Size.Small"></MudIconButton>
+                    <MudIconButton Href="@(MyNavigationManager.BaseUri + "cycle/" + Cycle?.StartDate.ToKey())" Icon="@Icons.Material.Filled.OpenWith" Size="Size.Small"></MudIconButton>
                 }
                 else
                 {
