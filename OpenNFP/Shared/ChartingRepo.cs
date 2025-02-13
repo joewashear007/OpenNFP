@@ -276,7 +276,22 @@ namespace OpenNFP.Shared
         public async Task InitializeAsync()
         {
             var loadedCycles = await _storage.ReadAsync<List<Cycle>>(CYCLE_KEY);
-            loadedCycles?.ForEach(q => _knownCycles.TryAdd(q.StartDate.ToKey(), q));
+            if (loadedCycles == null || !loadedCycles.Any())
+            {
+                Cycle newCycle = new Cycle()
+                {
+                    StartDate = DateTime.Today,
+                    Auto = true,
+                    ModifiedOn = DateTime.Today,
+
+                };
+                _knownCycles.TryAdd(newCycle.StartDate.ToKey(), newCycle);
+            }
+            else
+            {
+                loadedCycles.ForEach(q => _knownCycles.TryAdd(q.StartDate.ToKey(), q));
+            }
+            
 
             var loadedSettings = await _storage.ReadAsync<ChartSettings>(SETTING_KEY);
             if (loadedSettings != null)

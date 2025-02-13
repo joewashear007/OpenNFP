@@ -12,60 +12,69 @@
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<MudThemeProvider/>
-<MudPopoverProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-<MudLayout>
-
-    <MudAppBar>
-        @if (!isMainPage)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
-        }
-        else
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        }
-        OpenNFP
-        <MudSpacer />
-        <AuthorizeView>
-            <Authorized>
-                @if (isMainPage)
+<ErrorBoundary>
+    <ChildContent>
+        <MudLayout>
+            <MudAppBar>
+                @if (!isMainPage)
                 {
-                    <MudIconButton Icon="@syncIcon" Color="Color.Inherit" OnClick="@Sync" Class="@syncIconClasses" Disabled=@syncIconDisabled />
-                }
-            </Authorized>
-            <NotAuthorized>
-                <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
-            </NotAuthorized>
-        </AuthorizeView>
-        @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
-        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
-        @if (uriHelper.ToBaseRelativePath(uriHelper.Uri) == "/cycles")
-        {
-            if (AppState.TryGet("ListCycles:IncludeDeletedCycles", out bool includeDelCycle))
-            {
-                if (includeDelCycle)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" OnClick="Home" />
                 }
                 else
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.FilterListOff" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
                 }
-            }
-        }
+                OpenNFP
+                <MudSpacer />
+                <AuthorizeView>
+                    <Authorized>
+                        @if (isMainPage)
+                        {
+                            <MudIconButton Icon="@syncIcon" Color="Color.Inherit" OnClick="@Sync" Class="@syncIconClasses" Disabled=@syncIconDisabled />
+                        }
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudIconButton Icon="@Icons.Material.Outlined.Login" Color="Color.Inherit" OnClick="@Login" />
+                    </NotAuthorized>
+                </AuthorizeView>
+                @*<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="@Refresh" />*@
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Inherit" OnClick="@AddDay" />
+                @if (uriHelper.ToBaseRelativePath(uriHelper.Uri) == "/cycles")
+                {
+                    if (AppState.TryGet("ListCycles:IncludeDeletedCycles", out bool includeDelCycle))
+                    {
+                        if (includeDelCycle)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                        }
+                        else
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.FilterListOff" Color="Color.Inherit" OnClick="@ToggleFilterList" />
+                        }
+                    }
+                }
 
-    </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        @Body
-    </MudMainContent>
-</MudLayout>
+            </MudAppBar>
+            <MudDrawer @bind-Open="@_drawerOpen">
+                <NavMenu />
+            </MudDrawer>
+            <MudMainContent>
+                @Body
+            </MudMainContent>
+        </MudLayout>
+    </ChildContent>
+    <ErrorContent Context="ex">
+        @{
+            OnError(@ex);
+        } @*calls custom handler*@
+        <p>@ex.Message</p> @*prints exeption on page*@
+    </ErrorContent>
+</ErrorBoundary>
 
 @code {
     private string syncIconClasses = string.Empty;
@@ -75,6 +84,10 @@
 
     public bool isMainPage { get => new Uri(uriHelper.Uri).Segments.Count() == 1; }
 
+    void OnError(Exception ex) {
+        Console.WriteLine(ex.Message);
+        Console.WriteLine(ex.StackTrace);
+    }
 
     void DrawerToggle()
     {
@@ -122,7 +135,7 @@
                 config.Action = "Cancel";
                 config.ActionVariant = Variant.Text;
                 config.ActionColor = Color.Error;
-                config.Onclick = snackbar =>
+                config.OnClick = snackbar =>
                 {
                     cancellationTokenSource.Cancel();
                     Snackbar.Add("Sync Cancelled", Severity.Warning);
@@ -154,7 +167,7 @@
                 config.Action = "Sign In";
                 config.ActionVariant = Variant.Text;
                 config.ActionColor = Color.Warning;
-                config.Onclick = snackbar =>
+                config.OnClick = snackbar =>
                 {
                     tokenEx.Redirect();
                     return Task.CompletedTask;

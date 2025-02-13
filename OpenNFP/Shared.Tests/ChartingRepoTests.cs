@@ -403,5 +403,24 @@ namespace OpenNFP.Shared.Tests
             await repo.InitializeAsync();
             Assert.AreEqual(3, repo.CycleCount, "Expected only active secrets");
         }
+
+        [TestMethod]
+        public async Task Initiaze_Empty()
+        {
+            FakeStorageBackend storageBackend = new();
+            var repo = new ChartingRepo(storageBackend, new NullLogger<IChartingRepo>());
+            await repo.InitializeAsync();
+            Assert.AreEqual(1, repo.CycleCount, "Expected a new cycle");
+        }
+
+        [TestMethod]
+        public async Task Initiaze_NoCycles()
+        {
+            FakeStorageBackend storageBackend = new();
+            var repo = new ChartingRepo(storageBackend, new NullLogger<IChartingRepo>());
+            await storageBackend.WriteAsync(ChartingRepo.SETTING_KEY, new ChartSettings() { });
+            await repo.InitializeAsync();
+            Assert.AreEqual(1, repo.CycleCount, "Expected a new cycle");
+        }
     }
 }
