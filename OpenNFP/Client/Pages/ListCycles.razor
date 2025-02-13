@@ -21,7 +21,7 @@
             </MudText>
             <MudTextField @bind-Value="@ci.Item.Notes" Label="Cycle Notes" Variant="Variant.Outlined" Lines="3" />
 
-            <MudButton Href="@(uriHelper.BaseUri + "/cycle/" + ci.Item?.StartDate.ToKey())" StartIcon="@Icons.Material.Filled.OpenWith">Open Chart</MudButton>
+            <MudButton Href="@(uriHelper.BaseUri + "cycle/" + ci.Item?.StartDate.ToKey())" StartIcon="@Icons.Material.Filled.OpenWith">Open Chart</MudButton>
 
             @if (ci?.Item?.Deleted ?? false)
             {

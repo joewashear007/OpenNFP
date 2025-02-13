@@ -218,10 +218,16 @@
         }
 
         window.odic_login = function () {
-            window.AuthenticationService.instance['_userManager'].signinRedirect();
+            if (typeof window.AuthenticationService.instance !== "undefined") {
+                window.AuthenticationService.instance['_userManager'].signinRedirect();
+            }
         };
         window.oidc_info = function () {
-            return window.AuthenticationService.instance['_userManager'].getUser().then(u => JSON.stringify({ expired: u.expired, expires_at: u.expires_at, expires_in: u.expires_in }))
+            if (typeof window.AuthenticationService.instance !== "undefined") {
+                return window.AuthenticationService.instance['_userManager'].getUser().then(u => JSON.stringify({ expired: u.expired, expires_at: u.expires_at, expires_in: u.expires_in }))
+            } else {
+                return JSON.stringify({ expired: -1, expires_at: -1, expires_in: -1 })
+            }
         }
 
     </script>
