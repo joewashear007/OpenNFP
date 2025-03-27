@@ -67,16 +67,36 @@ namespace OpenNFP.Shared.Backend
                     FileId = file.Id,
                     FileName = file.Name,
                     FileSizeKb = (int)(file.Size ?? 0 / 1024),
-                    SyncTimeStamp = file.ModifiedTime.GetValueOrDefault()
+                    SyncTimeStamp = file.ModifiedTimeDateTimeOffset.GetValueOrDefault().DateTime
                 };
             }
             else
             {
                 return SyncInfo.Empty;
             }
-
-
         }
+
+
+        public async Task<List<RemoteFile>> GetFilePickerAsync(CancellationToken token = default)
+        {
+            DriveService service = await GetDriveService(token);
+
+            var listRequest = service.Files.List();
+            listRequest.Fields = "files(id,name,createdTime,modifiedTime,size)";
+            var rawfiles = await listRequest.ExecuteAsync(token);
+            var files = rawfiles.Files.Select(q =>
+                new RemoteFile()
+                {
+                    Id = q.Id,
+                    Name = q.Name,
+                    CreatedTime = q.CreatedTimeDateTimeOffset.GetValueOrDefault().DateTime,
+                    ModifiedTime = q.ModifiedTimeDateTimeOffset.GetValueOrDefault().DateTime,
+                    Size = q.Size
+                }
+            ).ToList();
+            return files;
+        }
+
 
         public async Task<T?> ReadAsync<T>(SyncInfo key, CancellationToken token)
         {

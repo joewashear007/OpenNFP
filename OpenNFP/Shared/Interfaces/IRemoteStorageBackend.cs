@@ -13,5 +13,6 @@ namespace OpenNFP.Shared.Interfaces
         Task WriteAsync<T>(SyncInfo key, T obj, CancellationToken token);
         Task<T?> ReadAsync<T>(SyncInfo key, CancellationToken token);
         Task<MemoryStream> ReadStreamAsync(SyncInfo key, CancellationToken token);
+        Task<List<RemoteFile>> GetFilePickerAsync(CancellationToken token = default);
     }
 }

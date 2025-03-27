@@ -111,6 +111,18 @@
 
                 </MudCardActions>
             </MudCard>
+
+            <MudCard>
+                <MudCardHeader>Possible Files</MudCardHeader>
+                <MudCardContent>
+                    @foreach(var f in RemoteFiles)
+                    {
+                        <div>
+                            @f.Name (@f.Size - modified @f.ModifiedTime)
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
         </Authorized>
         <NotAuthorized>
             <p>Please Sign into Google To Sync</p>
@@ -138,13 +150,23 @@
     string ErrorMsg { get; set; } = string.Empty;
     string OidcInfo { get; set; } = string.Empty;
     CancellationTokenSource cancellationTokenSource { get; set; } = new();
+    List<RemoteFile> RemoteFiles = [];
 
-    protected override async void OnAfterRender(bool firstRender)
+    [CascadingParameter] 
+    protected Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await refreshFileInfo();
             OidcInfo = await JSRuntime.InvokeAsync<string>("oidc_info");
+
+            var user = (await AuthenticationStateTask).User;
+            if (user.Identity.IsAuthenticated)
+            {
+                await LoadRemoteFilesAsync();
+            }
             StateHasChanged();
         }
     }
@@ -264,5 +286,10 @@
         {
             _processing = false;
         }
+    }
+
+    public async Task LoadRemoteFilesAsync()
+    {
+        RemoteFiles = await remoteStorageBackend.GetFilePickerAsync(cancellationTokenSource.Token);
     }
 }
