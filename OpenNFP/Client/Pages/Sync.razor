@@ -38,17 +38,17 @@
                     <pre>
                         @if (_loading)
                         {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Large" Indeterminate="true" />
-                                <MudText Class="ms-2">Loading File Info</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Large" Indeterminate="true" />
+                            <MudText Class="ms-2">Loading File Info</MudText>
                         }
                         else
                         {
-                                <h3>Name = @File.FileName</h3>
-                                <ul>
+                            <h3>Name = @File.FileName</h3>
+                            <ul>
                                 <li>Date Modified = @File.SyncTimeStamp</li>
                                 <li>Size = @File.FileSizeKb KB</li>
                                 <li>Id = @File.FileId</li>
-                                                    </ul>
+                            </ul>
                         }
                     </pre>
                     <pre>
@@ -59,50 +59,50 @@
                     <MudButton OnClick="refreshFileInfo" Variant="Variant.Text" Color="Color.Primary">
                         @if (_loading)
                         {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                                    <MudText>Refresh</MudText>
+                            <MudText>Refresh</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="SyncData" Variant="Variant.Text" Color="Color.Tertiary">
                         @if (_loading)
                         {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                                    <MudText>Sync</MudText>
+                            <MudText>Sync</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="ReadData" Variant="Variant.Text" Color="Color.Primary">
                         @if (_processing)
                         {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                                    <MudText>Download</MudText>
+                            <MudText>Download</MudText>
                         }
                     </MudButton>
                     <MudButton OnClick="WriteData" Variant="Variant.Text" Color="Color.Secondary">
                         @if (_processing)
                         {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
-                                    <MudText>Write</MudText>
+                            <MudText>Write</MudText>
                         }
                     </MudButton>
 
                     <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary" Disabled="@_processing">
-                            <MudText>Cancel</MudText>
+                        <MudText>Cancel</MudText>
                     </MudButton>
 
                     <MudButton OnClick="OidcLogin" Variant="Variant.Text" Color="Color.Warning" Disabled="@_processing">
@@ -118,9 +118,10 @@
     </AuthorizeView>
 
     <br />
-    <code>
-        @ErrorMsg
-    </code>
+    @if(!string.IsNullOrEmpty(ErrorMsg))
+    {
+        <MudAlert Severity="Severity.Error">@ErrorMsg</MudAlert>
+    }
     <hr />
     <h6>Oidc Info</h6>
     <code>

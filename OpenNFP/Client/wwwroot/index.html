@@ -224,7 +224,14 @@
         };
         window.oidc_info = function () {
             if (typeof window.AuthenticationService.instance !== "undefined") {
-                return window.AuthenticationService.instance['_userManager'].getUser().then(u => JSON.stringify({ expired: u.expired, expires_at: u.expires_at, expires_in: u.expires_in }))
+                return window.AuthenticationService.instance['_userManager'].getUser()
+                    .then(u => {
+                        if (u !== null) {
+                            return JSON.stringify({ expired: u.expired, expires_at: u.expires_at, expires_in: u.expires_in });
+                        } else {
+                            return JSON.stringify({ expired: -1, expires_at: -1, expires_in: -1 })
+                        }
+                    });
             } else {
                 return JSON.stringify({ expired: -1, expires_at: -1, expires_in: -1 })
             }
